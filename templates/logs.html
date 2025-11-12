@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logs & Monitoring - AI Network Simulator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+   <nav class="navbar">
+    <div class="nav-brand">
+        <h1>🤖 AI Network Simulator</h1>
+    </div>
+    <div class="nav-links">
+        <a href="/" class="active">Dashboard</a>
+        <a href="/topology">Topology</a>
+        <a href="/config">Configuration</a>
+        <a href="/simulation">Simulation</a>
+        <a href="/devices">Devices</a>
+        <a href="/analysis">Analysis</a>
+        <a href="/ml">AI/ML</a>
+        <a href="/logs">Logs</a>
+        <a href="/reports">Reports</a>
+        <a href="/settings">Settings</a>
+        
+        <!-- User Info Section -->
+        <div class="user-info">
+            <span>Welcome, {{ user.name }}</span>
+            <div class="user-dropdown">
+                <button class="btn-user">👤 {{ user.user }}</button>
+                <div class="user-menu">
+                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
+                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+    <div class="container">
+        <div class="section">
+            <h2>📋 System Logs & Monitoring</h2>
+            
+            <div class="logs-controls">
+                <div class="filter-group">
+                    <label>Log Level:</label>
+                    <select id="log-level" onchange="filterLogs()">
+                        <option value="all">All Levels</option>
+                        <option value="info">Info</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Device:</label>
+                    <select id="log-device" onchange="filterLogs()">
+                        <option value="all">All Devices</option>
+                        <option value="R1">Router R1</option>
+                        <option value="R2">Router R2</option>
+                        <option value="SW1">Switch SW1</option>
+                        <option value="system">System</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label>Time Range:</label>
+                    <select id="log-time" onchange="filterLogs()">
+                        <option value="1h">Last 1 Hour</option>
+                        <option value="6h">Last 6 Hours</option>
+                        <option value="24h">Last 24 Hours</option>
+                        <option value="7d">Last 7 Days</option>
+                    </select>
+                </div>
+                
+                <button class="btn btn-success" onclick="refreshLogs()">🔄 Refresh</button>
+                <button class="btn" onclick="clearLogs()">🗑️ Clear</button>
+                <button class="btn" onclick="exportLogs()">📥 Export</button>
+                <button class="btn" id="live-toggle" onclick="toggleLiveLogs()">⏸️ Pause Live</button>
+            </div>
+
+            <div class="logs-stats">
+                <div class="log-stat">
+                    <span class="stat-count" id="total-logs">0</span>
+                    <span class="stat-label">Total Logs</span>
+                </div>
+                <div class="log-stat">
+                    <span class="stat-count info" id="info-logs">0</span>
+                    <span class="stat-label">Info</span>
+                </div>
+                <div class="log-stat">
+                    <span class="stat-count warning" id="warning-logs">0</span>
+                    <span class="stat-label">Warnings</span>
+                </div>
+                <div class="log-stat">
+                    <span class="stat-count error" id="error-logs">0</span>
+                    <span class="stat-label">Errors</span>
+                </div>
+            </div>
+
+            <div class="logs-container">
+                <div class="logs-header">
+                    <h3>Real-time Logs</h3>
+                    <div class="logs-actions">
+                        <button class="btn-small" onclick="scrollToTop()">⬆️ Top</button>
+                        <button class="btn-small" onclick="scrollToBottom()">⬇️ Bottom</button>
+                        <button class="btn-small" onclick="toggleAutoScroll()">🔗 Auto-scroll</button>
+                    </div>
+                </div>
+                
+                <div class="logs-list" id="logs-list">
+                    <!-- Logs will be displayed here -->
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>📊 Log Analytics</h3>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <h4>Log Distribution</h4>
+                        <div class="log-distribution" id="log-distribution">
+                            <!-- Distribution chart -->
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Top Devices</h4>
+                        <div class="top-devices" id="top-devices">
+                            <!-- Top devices list -->
+                        </div>
+                    </div>
+                    <div class="analytics-card">
+                        <h4>Recent Patterns</h4>
+                        <div class="recent-patterns" id="recent-patterns">
+                            <!-- Pattern analysis -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let liveLogsEnabled = true;
+        let autoScrollEnabled = true;
+        let logInterval;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLogs();
+            startLiveLogs();
+            updateAnalytics();
+        });
+
+        function loadLogs() {
+            // Generate sample logs
+            const sampleLogs = generateSampleLogs(50);
+            displayLogs(sampleLogs);
+            updateLogStats(sampleLogs);
+        }
+
+        function generateSampleLogs(count) {
+            const levels = ['info', 'warning', 'error', 'critical'];
+            const devices = ['R1', 'R2', 'SW1', 'system'];
+            const messages = [
+                'Interface GigabitEthernet0/0 state changed to up',
+                'OSPF neighbor 192.168.1.2 state changed to FULL',
+                'CPU utilization exceeded 80% threshold',
+                'Configuration saved successfully',
+                'Link flap detected on interface GigabitEthernet0/1',
+                'BGP session with 10.0.0.2 established',
+                'Memory usage critical at 92%',
+                'Security policy updated',
+                'Packet loss detected on WAN link',
+                'System backup completed successfully',
+                'Unauthorized access attempt blocked',
+                'VLAN configuration modified',
+                'Temperature sensor reading normal',
+                'Firmware update available',
+                'Network topology change detected'
+            ];
+
+            const logs = [];
+            const now = new Date();
+            
+            for (let i = 0; i < count; i++) {
+                const level = levels[Math.floor(Math.random() * levels.length)];
+                const device = devices[Math.floor(Math.random() * devices.length)];
+                const message = messages[Math.floor(Math.random() * messages.length)];
+                const timestamp = new Date(now - Math.random() * 24 * 60 * 60 * 1000);
+                
+                logs.push({
+                    id: i + 1,
+                    timestamp: timestamp.toISOString(),
+                    level: level,
+                    device: device,
+                    message: message,
+                    source: `${device}-logger`
+                });
+            }
+            
+            // Sort by timestamp (newest first)
+            return logs.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        }
+
+        function displayLogs(logs) {
+            const logsList = document.getElementById('logs-list');
+            const filteredLogs = filterLogsByCriteria(logs);
+            
+            let html = '';
+            filteredLogs.forEach(log => {
+                const time = new Date(log.timestamp).toLocaleTimeString();
+                const date = new Date(log.timestamp).toLocaleDateString();
+                
+                html += `
+                    <div class="log-entry ${log.level}">
+                        <div class="log-time">
+                            <div class="log-date">${date}</div>
+                            <div class="log-time">${time}</div>
+                        </div>
+                        <div class="log-level ${log.level}">
+                            ${log.level.toUpperCase()}
+                        </div>
+                        <div class="log-device">
+                            ${log.device}
+                        </div>
+                        <div class="log-message">
+                            ${log.message}
+                        </div>
+                        <div class="log-source">
+                            ${log.source}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            logsList.innerHTML = html;
+            
+            if (autoScrollEnabled) {
+                scrollToBottom();
+            }
+        }
+
+        function filterLogsByCriteria(logs) {
+            const levelFilter = document.getElementById('log-level').value;
+            const deviceFilter = document.getElementById('log-device').value;
+            
+            return logs.filter(log => {
+                const levelMatch = levelFilter === 'all' || log.level === levelFilter;
+                const deviceMatch = deviceFilter === 'all' || log.device === deviceFilter;
+                return levelMatch && deviceMatch;
+            });
+        }
+
+        function filterLogs() {
+            loadLogs();
+        }
+
+        function updateLogStats(logs) {
+            const total = logs.length;
+            const info = logs.filter(log => log.level === 'info').length;
+            const warning = logs.filter(log => log.level === 'warning').length;
+            const error = logs.filter(log => log.level === 'error').length;
+            const critical = logs.filter(log => log.level === 'critical').length;
+            
+            document.getElementById('total-logs').textContent = total;
+            document.getElementById('info-logs').textContent = info;
+            document.getElementById('warning-logs').textContent = warning;
+            document.getElementById('error-logs').textContent = error + critical;
+        }
+
+        function startLiveLogs() {
+            logInterval = setInterval(() => {
+                if (liveLogsEnabled) {
+                    addNewLog();
+                }
+            }, 3000);
+        }
+
+        function addNewLog() {
+            const levels = ['info', 'warning', 'error'];
+            const devices = ['R1', 'R2', 'SW1'];
+            const messages = [
+                'Interface status check completed',
+                'Routing table updated',
+                'New device discovered',
+                'Performance metrics collected',
+                'Security scan in progress',
+                'Configuration validation passed',
+                'Network traffic normal',
+                'System health check OK'
+            ];
+
+            const level = levels[Math.floor(Math.random() * levels.length)];
+            const device = devices[Math.floor(Math.random() * devices.length)];
+            const message = messages[Math.floor(Math.random() * messages.length)];
+            
+            const newLog = {
+                id: Date.now(),
+                timestamp: new Date().toISOString(),
+                level: level,
+                device: device,
+                message: message,
+                source: `${device}-monitor`
+            };
+
+            const logsList = document.getElementById('logs-list');
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${level} new-log`;
+            logEntry.innerHTML = `
+                <div class="log-time">
+                    <div class="log-date">${new Date().toLocaleDateString()}</div>
+                    <div class="log-time">${new Date().toLocaleTimeString()}</div>
+                </div>
+                <div class="log-level ${level}">
+                    ${level.toUpperCase()}
+                </div>
+                <div class="log-device">
+                    ${device}
+                </div>
+                <div class="log-message">
+                    ${message}
+                </div>
+                <div class="log-source">
+                    ${device}-monitor
+                </div>
+            `;
+
+            logsList.insertBefore(logEntry, logsList.firstChild);
+            
+            // Remove the 'new-log' class after animation
+            setTimeout(() => {
+                logEntry.classList.remove('new-log');
+            }, 1000);
+
+            // Keep only last 100 logs
+            if (logsList.children.length > 100) {
+                logsList.removeChild(logsList.lastChild);
+            }
+
+            updateLogStats(getAllLogs());
+        }
+
+        function getAllLogs() {
+            const logEntries = document.querySelectorAll('.log-entry');
+            const logs = [];
+            
+            logEntries.forEach(entry => {
+                const level = Array.from(entry.classList).find(cls => 
+                    ['info', 'warning', 'error', 'critical'].includes(cls));
+                const device = entry.querySelector('.log-device').textContent;
+                const message = entry.querySelector('.log-message').textContent;
+                const source = entry.querySelector('.log-source').textContent;
+                const dateStr = entry.querySelector('.log-date').textContent;
+                const timeStr = entry.querySelector('.log-time .log-time').textContent;
+                
+                logs.push({
+                    level: level,
+                    device: device,
+                    message: message,
+                    source: source,
+                    timestamp: new Date(`${dateStr} ${timeStr}`).toISOString()
+                });
+            });
+            
+            return logs;
+        }
+
+        function toggleLiveLogs() {
+            liveLogsEnabled = !liveLogsEnabled;
+            const button = document.getElementById('live-toggle');
+            
+            if (liveLogsEnabled) {
+                button.innerHTML = '⏸️ Pause Live';
+                button.classList.remove('btn-danger');
+                button.classList.add('btn');
+            } else {
+                button.innerHTML = '▶️ Resume Live';
+                button.classList.remove('btn');
+                button.classList.add('btn-danger');
+            }
+        }
+
+        function refreshLogs() {
+            loadLogs();
+            showNotification('Logs refreshed', 'success');
+        }
+
+        function clearLogs() {
+            if (confirm('Are you sure you want to clear all logs?')) {
+                document.getElementById('logs-list').innerHTML = '';
+                updateLogStats([]);
+                showNotification('Logs cleared', 'success');
+            }
+        }
+
+        function exportLogs() {
+            const logs = getAllLogs();
+            let csv = 'Timestamp,Level,Device,Message,Source\n';
+            
+            logs.forEach(log => {
+                const time = new Date(log.timestamp).toLocaleString();
+                csv += `"${time}","${log.level}","${log.device}","${log.message}","${log.source}"\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `network-logs-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('Logs exported to CSV', 'success');
+        }
+
+        function scrollToTop() {
+            const logsList = document.getElementById('logs-list');
+            logsList.scrollTop = 0;
+        }
+
+        function scrollToBottom() {
+            const logsList = document.getElementById('logs-list');
+            logsList.scrollTop = logsList.scrollHeight;
+        }
+
+        function toggleAutoScroll() {
+            autoScrollEnabled = !autoScrollEnabled;
+            showNotification(`Auto-scroll ${autoScrollEnabled ? 'enabled' : 'disabled'}`, 'info');
+        }
+
+        function updateAnalytics() {
+            // Update log distribution
+            const distributionDiv = document.getElementById('log-distribution');
+            distributionDiv.innerHTML = `
+                <div class="distribution-bar">
+                    <div class="bar-label">Info</div>
+                    <div class="bar">
+                        <div class="bar-fill info" style="width: 60%"></div>
+                    </div>
+                    <div class="bar-value">60%</div>
+                </div>
+                <div class="distribution-bar">
+                    <div class="bar-label">Warning</div>
+                    <div class="bar">
+                        <div class="bar-fill warning" style="width: 25%"></div>
+                    </div>
+                    <div class="bar-value">25%</div>
+                </div>
+                <div class="distribution-bar">
+                    <div class="bar-label">Error</div>
+                    <div class="bar">
+                        <div class="bar-fill error" style="width: 12%"></div>
+                    </div>
+                    <div class="bar-value">12%</div>
+                </div>
+                <div class="distribution-bar">
+                    <div class="bar-label">Critical</div>
+                    <div class="bar">
+                        <div class="bar-fill critical" style="width: 3%"></div>
+                    </div>
+                    <div class="bar-value">3%</div>
+                </div>
+            `;
+
+            // Update top devices
+            const topDevicesDiv = document.getElementById('top-devices');
+            topDevicesDiv.innerHTML = `
+                <div class="device-rank">
+                    <span class="rank">1</span>
+                    <span class="device-name">Router R1</span>
+                    <span class="log-count">42 logs</span>
+                </div>
+                <div class="device-rank">
+                    <span class="rank">2</span>
+                    <span class="device-name">Switch SW1</span>
+                    <span class="log-count">38 logs</span>
+                </div>
+                <div class="device-rank">
+                    <span class="rank">3</span>
+                    <span class="device-name">Router R2</span>
+                    <span class="log-count">35 logs</span>
+                </div>
+                <div class="device-rank">
+                    <span class="rank">4</span>
+                    <span class="device-name">System</span>
+                    <span class="log-count">28 logs</span>
+                </div>
+            `;
+
+            // Update recent patterns
+            const patternsDiv = document.getElementById('recent-patterns');
+            patternsDiv.innerHTML = `
+                <div class="pattern-item">
+                    <div class="pattern-icon">📈</div>
+                    <div class="pattern-info">
+                        <div class="pattern-title">Increased Warnings</div>
+                        <div class="pattern-desc">15% increase in warning logs during peak hours</div>
+                    </div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-icon">🕒</div>
+                    <div class="pattern-info">
+                        <div class="pattern-title">Time-based Patterns</div>
+                        <div class="pattern-desc">Most errors occur between 2-4 PM daily</div>
+                    </div>
+                </div>
+                <div class="pattern-item">
+                    <div class="pattern-icon">🔗</div>
+                    <div class="pattern-info">
+                        <div class="pattern-title">Link Stability</div>
+                        <div class="pattern-desc">Interface errors decreased by 25% this week</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showNotification(message, type) {
+            alert(`${type === 'success' ? '✅' : 'ℹ️'} ${message}`);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            clearInterval(logInterval);
+        });
+    </script>
+
+    <style>
+        .logs-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .logs-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .log-stat {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-count {
+            display: block;
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-count.info { color: #3498db; }
+        .stat-count.warning { color: #f39c12; }
+        .stat-count.error { color: #e74c3c; }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .logs-container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: #34495e;
+            color: white;
+        }
+
+        .logs-header h3 {
+            margin: 0;
+        }
+
+        .logs-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .logs-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        .log-entry {
+            display: grid;
+            grid-template-columns: 120px 80px 80px 1fr 120px;
+            gap: 1rem;
+            padding: 0.75rem 1.5rem;
+            border-bottom: 1px solid #ecf0f1;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .log-entry:hover {
+            background: #f8f9fa;
+        }
+
+        .log-entry.new-log {
+            background: #e8f6f3;
+            animation: highlight 1s ease;
+        }
+
+        .log-entry.info {
+            border-left: 4px solid #3498db;
+        }
+
+        .log-entry.warning {
+            border-left: 4px solid #f39c12;
+        }
+
+        .log-entry.error {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .log-entry.critical {
+            border-left: 4px solid #c0392b;
+            background: #fadbd8;
+        }
+
+        .log-time {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .log-date {
+            font-weight: 600;
+        }
+
+        .log-level {
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-align: center;
+            text-transform: uppercase;
+        }
+
+        .log-level.info {
+            background: #d6eaf8;
+            color: #2874a6;
+        }
+
+        .log-level.warning {
+            background: #fef9e7;
+            color: #b7950b;
+        }
+
+        .log-level.error {
+            background: #fadbd8;
+            color: #c0392b;
+        }
+
+        .log-level.critical {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .log-device {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .log-message {
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .log-source {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            text-align: right;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .analytics-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .analytics-card h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5rem;
+        }
+
+        .distribution-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .bar-label {
+            width: 60px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .bar {
+            flex: 1;
+            background: #ecf0f1;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .bar-fill.info { background: #3498db; }
+        .bar-fill.warning { background: #f39c12; }
+        .bar-fill.error { background: #e74c3c; }
+        .bar-fill.critical { background: #c0392b; }
+
+        .bar-value {
+            width: 40px;
+            text-align: right;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .device-rank {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .device-rank:last-child {
+            border-bottom: none;
+        }
+
+        .rank {
+            background: #34495e;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+
+        .device-name {
+            flex: 1;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .log-count {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .pattern-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .pattern-item:last-child {
+            border-bottom: none;
+        }
+
+        .pattern-icon {
+            font-size: 1.5rem;
+        }
+
+        .pattern-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+
+        .pattern-desc {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        @keyframes highlight {
+            0% { background: #e8f6f3; }
+            100% { background: white; }
+        }
+
+        @media (max-width: 768px) {
+            .logs-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .log-entry {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+            }
+            
+            .log-time, .log-level, .log-device, .log-source {
+                text-align: left;
+            }
+            
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

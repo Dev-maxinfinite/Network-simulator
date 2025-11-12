@@ -1,0 +1,9 @@
+hostname R1
+!
+interface GigabitEthernet0/0
+ description Connected to SW1
+ ip address 192.168.1.1 255.255.255.0
+!
+interface GigabitEthernet0/1
+ description Connected to R2
+ ip address 10.0.0.1 255.255.255.252

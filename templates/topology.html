@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Topology - AI Network Simulator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+    <div class="nav-brand">
+        <h1>🤖 AI Network Simulator</h1>
+    </div>
+    <div class="nav-links">
+        <a href="/" class="active">Dashboard</a>
+        <a href="/topology">Topology</a>
+        <a href="/config">Configuration</a>
+        <a href="/simulation">Simulation</a>
+        <a href="/devices">Devices</a>
+        <a href="/analysis">Analysis</a>
+        <a href="/ml">AI/ML</a>
+        <a href="/logs">Logs</a>
+        <a href="/reports">Reports</a>
+        <a href="/settings">Settings</a>
+        
+        <!-- User Info Section -->
+        <div class="user-info">
+            <span>Welcome, {{ user.name }}</span>
+            <div class="user-dropdown">
+                <button class="btn-user">👤 {{ user.user }}</button>
+                <div class="user-menu">
+                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
+                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+    <div class="container">
+        <div class="section">
+            <h2>🌐 Network Topology</h2>
+            
+            <div class="topology-controls">
+                <button class="btn" onclick="loadTopology()">🔄 Refresh Topology</button>
+                <button class="btn btn-success" onclick="exportTopology()">📥 Export Topology</button>
+                <button class="btn" onclick="validateNetwork()">🔍 Validate Network</button>
+            </div>
+
+            <div class="topology-view">
+                <div id="topology-image-container">
+                    <img id="topology-image" src="" alt="Network Topology" style="max-width: 100%; border-radius: 10px;">
+                </div>
+                
+                <div class="topology-info">
+                    <h3>📊 Topology Information</h3>
+                    <div id="topology-stats">
+                        <p>Loading topology data...</p>
+                    </div>
+                    
+                    <div class="legend">
+                        <h4>Legend:</h4>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: lightblue;"></span>
+                            <span>Router</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: lightgreen;"></span>
+                            <span>Switch</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color" style="background: orange;"></span>
+                            <span>Other Devices</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🔗 Network Connections</h3>
+            <div id="connections-list">
+                <!-- Connections will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load topology when page loads
+        document.addEventListener('DOMContentLoaded', loadTopology);
+
+        function loadTopology() {
+            fetch('/api/topology')
+                .then(response => response.json())
+                .then(data => {
+                    // Update topology image
+                    document.getElementById('topology-image').src = 'data:image/png;base64,' + data.topology_image;
+                    
+                    // Update topology stats
+                    const statsHtml = `
+                        <p><strong>Total Devices:</strong> ${data.nodes.length}</p>
+                        <p><strong>Total Connections:</strong> ${data.links.length}</p>
+                        <p><strong>Routers:</strong> ${data.nodes.filter(n => n.device_type === 'router').length}</p>
+                        <p><strong>Switches:</strong> ${data.nodes.filter(n => n.device_type === 'switch').length}</p>
+                    `;
+                    document.getElementById('topology-stats').innerHTML = statsHtml;
+                    
+                    // Update connections list
+                    updateConnectionsList(data.links);
+                })
+                .catch(error => {
+                    console.error('Error loading topology:', error);
+                    document.getElementById('topology-stats').innerHTML = '<p style="color: red;">Error loading topology</p>';
+                });
+        }
+
+        function updateConnectionsList(links) {
+            const connectionsDiv = document.getElementById('connections-list');
+            
+            if (links.length === 0) {
+                connectionsDiv.innerHTML = '<p>No connections found</p>';
+                return;
+            }
+            
+            let html = '<div class="connections-grid">';
+            links.forEach(link => {
+                html += `
+                    <div class="connection-card">
+                        <div class="connection-line"></div>
+                        <div class="connection-info">
+                            <strong>${link.source}</strong> 
+                            <span>↔</span> 
+                            <strong>${link.target}</strong>
+                            <br>
+                            <small>Interface: ${link.interface || 'N/A'}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            connectionsDiv.innerHTML = html;
+        }
+
+        function exportTopology() {
+            // Simple export functionality
+            const link = document.createElement('a');
+            link.href = document.getElementById('topology-image').src;
+            link.download = 'network-topology.png';
+            link.click();
+        }
+
+        function validateNetwork() {
+            fetch('/api/validate-config', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    device_name: 'network_validation',
+                    config: 'Network-wide validation'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.valid) {
+                    alert('✅ Network configuration is valid!');
+                } else {
+                    alert('❌ Network validation failed. Check configurations.');
+                }
+            });
+        }
+    </script>
+
+    <style>
+        .topology-controls {
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .topology-view {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .topology-info {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+        }
+
+        .legend {
+            margin-top: 1.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            border: 2px solid #ddd;
+        }
+
+        .connections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .connection-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .connection-info {
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .topology-view {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</body>
+</html>

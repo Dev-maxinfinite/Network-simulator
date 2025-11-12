@@ -1,0 +1,19 @@
+hostname SW1
+!
+interface GigabitEthernet1/1
+ description Connected to R1 interface GigabitEthernet0/0
+ switchport mode access
+!
+interface GigabitEthernet1/2
+ description Connected to PC1
+ switchport mode access
+!
+interface GigabitEthernet1/3
+ description Connected to PC2
+ switchport mode access
+!
+vlan 10
+ name Users
+!
+vlan 20
+ name Servers

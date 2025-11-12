@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports - AI Network Simulator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+   <nav class="navbar">
+    <div class="nav-brand">
+        <h1>🤖 AI Network Simulator</h1>
+    </div>
+    <div class="nav-links">
+        <a href="/" class="active">Dashboard</a>
+        <a href="/topology">Topology</a>
+        <a href="/config">Configuration</a>
+        <a href="/simulation">Simulation</a>
+        <a href="/devices">Devices</a>
+        <a href="/analysis">Analysis</a>
+        <a href="/ml">AI/ML</a>
+        <a href="/logs">Logs</a>
+        <a href="/reports">Reports</a>
+        <a href="/settings">Settings</a>
+        
+        <!-- User Info Section -->
+        <div class="user-info">
+            <span>Welcome, {{ user.name }}</span>
+            <div class="user-dropdown">
+                <button class="btn-user">👤 {{ user.user }}</button>
+                <div class="user-menu">
+                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
+                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+    <div class="container">
+        <div class="section">
+            <h2>📊 Reports & Analytics</h2>
+            
+            <div class="reports-controls">
+                <div class="report-filters">
+                    <div class="filter-group">
+                        <label>Report Type:</label>
+                        <select id="report-type" onchange="updateReportOptions()">
+                            <option value="performance">Performance Report</option>
+                            <option value="security">Security Audit</option>
+                            <option value="inventory">Device Inventory</option>
+                            <option value="compliance">Compliance Report</option>
+                            <option value="health">Network Health</option>
+                            <option value="traffic">Traffic Analysis</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Time Period:</label>
+                        <select id="time-period">
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="week" selected>Last 7 Days</option>
+                            <option value="month">Last 30 Days</option>
+                            <option value="quarter">Last Quarter</option>
+                            <option value="year">Last Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group" id="custom-range" style="display: none;">
+                        <label>Custom Range:</label>
+                        <div class="date-range">
+                            <input type="date" id="start-date">
+                            <span>to</span>
+                            <input type="date" id="end-date">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="report-actions">
+                    <button class="btn btn-success" onclick="generateReport()">📈 Generate Report</button>
+                    <button class="btn" onclick="scheduleReport()">⏰ Schedule</button>
+                    <button class="btn" onclick="exportReport()">📥 Export</button>
+                    <button class="btn" onclick="printReport()">🖨️ Print</button>
+                </div>
+            </div>
+
+            <div class="reports-dashboard">
+                <div class="report-preview" id="report-preview">
+                    <div class="report-header">
+                        <h3 id="report-title">Performance Report</h3>
+                        <div class="report-meta">
+                            <span id="report-period">Last 7 Days</span>
+                            <span id="report-date">Generated on: Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <div class="report-content">
+                        <div class="executive-summary" id="executive-summary">
+                            <!-- Executive summary will be loaded here -->
+                        </div>
+                        
+                        <div class="report-sections">
+                            <div class="report-section">
+                                <h4>📈 Key Performance Indicators</h4>
+                                <div class="kpi-grid" id="kpi-metrics">
+                                    <!-- KPI metrics will be loaded here -->
+                                </div>
+                            </div>
+                            
+                            <div class="report-section">
+                                <h4>📊 Performance Charts</h4>
+                                <div class="charts-container" id="performance-charts">
+                                    <!-- Performance charts will be loaded here -->
+                                </div>
+                            </div>
+                            
+                            <div class="report-section">
+                                <h4>⚠️ Issues & Recommendations</h4>
+                                <div class="issues-list" id="issues-recommendations">
+                                    <!-- Issues and recommendations will be loaded here -->
+                                </div>
+                            </div>
+                            
+                            <div class="report-section">
+                                <h4>🔧 Action Items</h4>
+                                <div class="action-items" id="action-items">
+                                    <!-- Action items will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="reports-sidebar">
+                    <h4>📋 Saved Reports</h4>
+                    <div class="saved-reports" id="saved-reports">
+                        <!-- Saved reports list -->
+                    </div>
+                    
+                    <h4>⚡ Quick Reports</h4>
+                    <div class="quick-reports">
+                        <button class="quick-report-btn" onclick="generateQuickReport('daily')">
+                            📅 Daily Summary
+                        </button>
+                        <button class="quick-report-btn" onclick="generateQuickReport('weekly')">
+                            📊 Weekly Performance
+                        </button>
+                        <button class="quick-report-btn" onclick="generateQuickReport('health')">
+                            ❤️ Health Check
+                        </button>
+                        <button class="quick-report-btn" onclick="generateQuickReport('security')">
+                            🛡️ Security Scan
+                        </button>
+                    </div>
+                    
+                    <h4>📈 Report Templates</h4>
+                    <div class="report-templates">
+                        <div class="template-item" onclick="loadTemplate('compliance')">
+                            <div class="template-icon">📋</div>
+                            <div class="template-info">
+                                <div class="template-name">Compliance</div>
+                                <div class="template-desc">ISO 27001, PCI DSS</div>
+                            </div>
+                        </div>
+                        <div class="template-item" onclick="loadTemplate('capacity')">
+                            <div class="template-icon">📈</div>
+                            <div class="template-info">
+                                <div class="template-name">Capacity Planning</div>
+                                <div class="template-desc">Growth analysis</div>
+                            </div>
+                        </div>
+                        <div class="template-item" onclick="loadTemplate('audit')">
+                            <div class="template-icon">🔍</div>
+                            <div class="template-info">
+                                <div class="template-name">Network Audit</div>
+                                <div class="template-desc">Comprehensive review</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📋 Report History</h3>
+            <div class="report-history" id="report-history">
+                <!-- Report history will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedReports();
+            loadReportHistory();
+            generateReport(); // Generate default report on load
+            
+            // Show/hide custom date range
+            document.getElementById('time-period').addEventListener('change', function() {
+                const customRange = document.getElementById('custom-range');
+                customRange.style.display = this.value === 'custom' ? 'block' : 'none';
+            });
+        });
+
+        function updateReportOptions() {
+            const reportType = document.getElementById('report-type').value;
+            // Could update other form elements based on report type
+        }
+
+        function generateReport() {
+            const reportType = document.getElementById('report-type').value;
+            const timePeriod = document.getElementById('time-period').value;
+            
+            showLoadingState();
+            
+            // Simulate report generation
+            setTimeout(() => {
+                updateReportPreview(reportType, timePeriod);
+                saveToReportHistory(reportType, timePeriod);
+                showNotification('Report generated successfully!', 'success');
+            }, 2000);
+        }
+
+        function showLoadingState() {
+            document.getElementById('executive-summary').innerHTML = '<div class="loading">Generating report...</div>';
+            document.getElementById('kpi-metrics').innerHTML = '<div class="loading">Loading metrics...</div>';
+            document.getElementById('performance-charts').innerHTML = '<div class="loading">Creating charts...</div>';
+            document.getElementById('issues-recommendations').innerHTML = '<div class="loading">Analyzing issues...</div>';
+            document.getElementById('action-items').innerHTML = '<div class="loading'>Preparing recommendations...</div>';
+        }
+
+        function updateReportPreview(reportType, timePeriod) {
+            const reportData = getReportData(reportType, timePeriod);
+            
+            // Update report header
+            document.getElementById('report-title').textContent = reportData.title;
+            document.getElementById('report-period').textContent = reportData.period;
+            document.getElementById('report-date').textContent = `Generated on: ${new Date().toLocaleString()}`;
+            
+            // Update executive summary
+            document.getElementById('executive-summary').innerHTML = `
+                <div class="summary-content">
+                    <p>${reportData.summary}</p>
+                    <div class="summary-stats">
+                        <div class="summary-stat">
+                            <div class="stat-value">${reportData.overallScore}%</div>
+                            <div class="stat-label">Overall Score</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="stat-value">${reportData.issuesCount}</div>
+                            <div class="stat-label">Issues Found</div>
+                        </div>
+                        <div class="summary-stat">
+                            <div class="stat-value">${reportData.recommendationsCount}</div>
+                            <div class="stat-label">Recommendations</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Update KPI metrics
+            updateKPIMetrics(reportData.kpis);
+            
+            // Update performance charts
+            updatePerformanceCharts(reportData.charts);
+            
+            // Update issues and recommendations
+            updateIssuesAndRecommendations(reportData.issues);
+            
+            // Update action items
+            updateActionItems(reportData.actions);
+        }
+
+        function getReportData(reportType, timePeriod) {
+            const reportTemplates = {
+                performance: {
+                    title: 'Network Performance Report',
+                    period: getPeriodText(timePeriod),
+                    summary: 'The network demonstrated stable performance with occasional spikes during peak hours. Overall reliability remains high, but some optimization opportunities have been identified.',
+                    overallScore: 88,
+                    issuesCount: 3,
+                    recommendationsCount: 5,
+                    kpis: [
+                        { name: 'Uptime', value: '99.95%', trend: 'up', target: '99.9%' },
+                        { name: 'Avg Latency', value: '25ms', trend: 'stable', target: '<30ms' },
+                        { name: 'Packet Loss', value: '0.1%', trend: 'down', target: '<0.5%' },
+                        { name: 'Bandwidth Usage', value: '65%', trend: 'up', target: '<80%' }
+                    ],
+                    charts: ['cpu', 'memory', 'bandwidth'],
+                    issues: [
+                        { type: 'warning', title: 'High CPU Usage on R1', description: 'Router R1 consistently reaches 85% CPU during peak hours' },
+                        { type: 'info', title: 'Memory Optimization', description: 'Consider optimizing memory allocation on core switches' },
+                        { type: 'critical', title: 'Backup Schedule', description: 'Regular backups are overdue by 3 days' }
+                    ],
+                    actions: [
+                        { priority: 'high', task: 'Implement load balancing for R1', assignee: 'Network Team', due: '2024-12-20' },
+                        { priority: 'medium', task: 'Review and update backup policies', assignee: 'Admin', due: '2024-12-25' },
+                        { priority: 'low', task: 'Optimize QoS configurations', assignee: 'Network Team', due: '2024-12-30' }
+                    ]
+                },
+                security: {
+                    title: 'Security Audit Report',
+                    period: getPeriodText(timePeriod),
+                    summary: 'Security posture remains strong with no critical vulnerabilities detected. Regular security scans show compliance with established policies.',
+                    overallScore: 92,
+                    issuesCount: 1,
+                    recommendationsCount: 3,
+                    kpis: [
+                        { name: 'Security Score', value: '92%', trend: 'up', target: '90%' },
+                        { name: 'Vulnerabilities', value: '2', trend: 'down', target: '<5' },
+                        { name: 'Failed Logins', value: '15', trend: 'stable', target: '<20' },
+                        { name: 'Policy Compliance', value: '98%', trend: 'up', target: '95%' }
+                    ],
+                    charts: ['threats', 'compliance', 'access'],
+                    issues: [
+                        { type: 'warning', title: 'Firewall Rule Review', description: 'Some firewall rules need review and optimization' }
+                    ],
+                    actions: [
+                        { priority: 'medium', task: 'Review and update firewall rules', assignee: 'Security Team', due: '2024-12-22' },
+                        { priority: 'low', task: 'Update security documentation', assignee: 'Admin', due: '2024-12-28' }
+                    ]
+                }
+            };
+            
+            return reportTemplates[reportType] || reportTemplates.performance;
+        }
+
+        function getPeriodText(timePeriod) {
+            const periods = {
+                'today': 'Today',
+                'yesterday': 'Yesterday',
+                'week': 'Last 7 Days',
+                'month': 'Last 30 Days',
+                'quarter': 'Last Quarter',
+                'year': 'Last Year',
+                'custom': 'Custom Range'
+            };
+            return periods[timePeriod] || 'Last 7 Days';
+        }
+
+        function updateKPIMetrics(kpis) {
+            const kpiGrid = document.getElementById('kpi-metrics');
+            let html = '';
+            
+            kpis.forEach(kpi => {
+                const trendIcon = kpi.trend === 'up' ? '📈' : kpi.trend === 'down' ? '📉' : '➡️';
+                const trendClass = kpi.trend === 'up' ? 'positive' : kpi.trend === 'down' ? 'negative' : 'neutral';
+                
+                html += `
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div class="kpi-name">${kpi.name}</div>
+                            <div class="kpi-trend ${trendClass}">${trendIcon}</div>
+                        </div>
+                        <div class="kpi-value">${kpi.value}</div>
+                        <div class="kpi-target">Target: ${kpi.target}</div>
+                    </div>
+                `;
+            });
+            
+            kpiGrid.innerHTML = html;
+        }
+
+        function updatePerformanceCharts(chartTypes) {
+            const chartsContainer = document.getElementById('performance-charts');
+            let html = '';
+            
+            chartTypes.forEach(type => {
+                html += `
+                    <div class="chart-card">
+                        <h5>${getChartTitle(type)}</h5>
+                        <div class="chart-placeholder">
+                            <div class="chart-bars">
+                                <div class="bar" style="height: 60%"></div>
+                                <div class="bar" style="height: 75%"></div>
+                                <div class="bar" style="height: 45%"></div>
+                                <div class="bar" style="height: 85%"></div>
+                                <div class="bar" style="height: 65%"></div>
+                            </div>
+                        </div>
+                        <div class="chart-legend">
+                            <span class="legend-item">Mon</span>
+                            <span class="legend-item">Tue</span>
+                            <span class="legend-item">Wed</span>
+                            <span class="legend-item">Thu</span>
+                            <span class="legend-item">Fri</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            chartsContainer.innerHTML = html;
+        }
+
+        function getChartTitle(type) {
+            const titles = {
+                'cpu': 'CPU Utilization',
+                'memory': 'Memory Usage',
+                'bandwidth': 'Bandwidth Consumption',
+                'threats': 'Security Threats',
+                'compliance': 'Compliance Score',
+                'access': 'Access Patterns'
+            };
+            return titles[type] || 'Performance Chart';
+        }
+
+        function updateIssuesAndRecommendations(issues) {
+            const issuesDiv = document.getElementById('issues-recommendations');
+            let html = '';
+            
+            issues.forEach(issue => {
+                const icon = issue.type === 'critical' ? '🔴' : issue.type === 'warning' ? '🟡' : '🔵';
+                
+                html += `
+                    <div class="issue-item ${issue.type}">
+                        <div class="issue-icon">${icon}</div>
+                        <div class="issue-content">
+                            <div class="issue-title">${issue.title}</div>
+                            <div class="issue-description">${issue.description}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            issuesDiv.innerHTML = html;
+        }
+
+        function updateActionItems(actions) {
+            const actionsDiv = document.getElementById('action-items');
+            let html = '';
+            
+            actions.forEach(action => {
+                const priorityClass = action.priority === 'high' ? 'high-priority' : 
+                                   action.priority === 'medium' ? 'medium-priority' : 'low-priority';
+                
+                html += `
+                    <div class="action-item ${priorityClass}">
+                        <div class="action-priority">${action.priority.toUpperCase()}</div>
+                        <div class="action-content">
+                            <div class="action-task">${action.task}</div>
+                            <div class="action-details">
+                                <span class="assignee">👤 ${action.assignee}</span>
+                                <span class="due-date">📅 ${action.due}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            actionsDiv.innerHTML = html;
+        }
+
+        function scheduleReport() {
+            const reportType = document.getElementById('report-type').value;
+            const timePeriod = document.getElementById('time-period').value;
+            
+            alert(`📅 Report scheduled!\n\nType: ${reportType}\nFrequency: Weekly\nNext run: Next Monday 8:00 AM`);
+        }
+
+        function exportReport() {
+            const reportType = document.getElementById('report-type').value;
+            const timestamp = new Date().toISOString().split('T')[0];
+            
+            const exportData = {
+                title: document.getElementById('report-title').textContent,
+                period: document.getElementById('report-period').textContent,
+                date: document.getElementById('report-date').textContent,
+                content: document.querySelector('.report-content').innerText
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${reportType}-report-${timestamp}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showNotification('Report exported successfully!', 'success');
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function generateQuickReport(type) {
+            const quickReports = {
+                'daily': { type: 'performance', period: 'today' },
+                'weekly': { type: 'performance', period: 'week' },
+                'health': { type: 'health', period: 'today' },
+                'security': { type: 'security', period: 'week' }
+            };
+            
+            const config = quickReports[type];
+            if (config) {
+                document.getElementById('report-type').value = config.type;
+                document.getElementById('time-period').value = config.period;
+                generateReport();
+            }
+        }
+
+        function loadTemplate(template) {
+            alert(`📋 Loading ${template} report template...\n\nThis would load a pre-configured report template with standard sections and metrics.`);
+        }
+
+        function loadSavedReports() {
+            const savedReports = [
+                { name: 'Weekly Performance Review', date: '2024-12-15', type: 'performance' },
+                { name: 'Monthly Security Audit', date: '2024-12-10', type: 'security' },
+                { name: 'Q4 Capacity Planning', date: '2024-12-05', type: 'inventory' }
+            ];
+            
+            const savedDiv = document.getElementById('saved-reports');
+            let html = '';
+            
+            savedReports.forEach(report => {
+                html += `
+                    <div class="saved-report-item">
+                        <div class="report-name">${report.name}</div>
+                        <div class="report-date">${report.date}</div>
+                        <button class="btn-small" onclick="loadSavedReport('${report.name}')">Load</button>
+                    </div>
+                `;
+            });
+            
+            savedDiv.innerHTML = html;
+        }
+
+        function loadSavedReport(name) {
+            showNotification(`Loading report: ${name}`, 'info');
+            // In real implementation, this would load the report from storage
+        }
+
+        function loadReportHistory() {
+            const history = [
+                { name: 'Performance Report', date: '2024-12-18 14:30', status: 'completed' },
+                { name: 'Security Audit', date: '2024-12-17 09:15', status: 'completed' },
+                { name: 'Device Inventory', date: '2024-12-16 16:45', status: 'completed' },
+                { name: 'Health Check', date: '2024-12-15 11:20', status: 'failed' }
+            ];
+            
+            const historyDiv = document.getElementById('report-history');
+            let html = '';
+            
+            history.forEach(item => {
+                const statusIcon = item.status === 'completed' ? '✅' : '❌';
+                const statusClass = item.status === 'completed' ? 'completed' : 'failed';
+                
+                html += `
+                    <div class="history-item ${statusClass}">
+                        <div class="history-info">
+                            <div class="history-name">${item.name}</div>
+                            <div class="history-date">${item.date}</div>
+                        </div>
+                        <div class="history-status">
+                            <span class="status-icon">${statusIcon}</span>
+                            <span class="status-text">${item.status}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            historyDiv.innerHTML = html;
+        }
+
+        function saveToReportHistory(reportType, timePeriod) {
+            // In real implementation, this would save to localStorage or database
+            console.log('Report saved to history:', { reportType, timePeriod, timestamp: new Date() });
+        }
+
+        function showNotification(message, type) {
+            const icon = type === 'success' ? '✅' : 'ℹ️';
+            alert(`${icon} ${message}`);
+        }
+    </script>
+
+    <style>
+        .reports-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .report-filters {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.9rem;
+        }
+
+        .date-range {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .report-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .reports-dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .report-preview {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .report-header {
+            background: #34495e;
+            color: white;
+            padding: 1.5rem;
+        }
+
+        .report-header h3 {
+            margin: 0 0 0.5rem 0;
+            color: white;
+        }
+
+        .report-meta {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.9rem;
+            color: #bdc3c7;
+        }
+
+        .report-content {
+            padding: 2rem;
+        }
+
+        .executive-summary {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 4px solid #3498db;
+        }
+
+        .summary-content p {
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 1rem;
+        }
+
+        .summary-stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .report-section {
+            margin-bottom: 2rem;
+        }
+
+        .report-section h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5rem;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border: 1px solid #ecf0f1;
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .kpi-trend {
+            font-size: 1.2rem;
+        }
+
+        .kpi-trend.positive { color: #27ae60; }
+        .kpi-trend.negative { color: #e74c3c; }
+        .kpi-trend.neutral { color: #f39c12; }
+
+        .kpi-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .kpi-target {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .chart-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+        }
+
+        .chart-card h5 {
+            margin: 0 0 1rem 0;
+            color: #2c3e50;
+        }
+
+        .chart-placeholder {
+            height: 150px;
+            background: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: end;
+            justify-content: space-around;
+            padding: 1rem;
+        }
+
+        .chart-bars {
+            display: flex;
+            align-items: end;
+            gap: 0.5rem;
+            height: 100%;
+        }
+
+        .bar {
+            background: linear-gradient(to top, #3498db, #2ecc71);
+            width: 30px;
+            border-radius: 2px 2px 0 0;
+        }
+
+        .chart-legend {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .issues-list, .action-items {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .issue-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .issue-item.critical {
+            background: #fadbd8;
+            border-color: #e74c3c;
+        }
+
+        .issue-item.warning {
+            background: #fef9e7;
+            border-color: #f39c12;
+        }
+
+        .issue-item.info {
+            background: #ebf5fb;
+            border-color: #3498db;
+        }
+
+        .issue-icon {
+            font-size: 1.5rem;
+        }
+
+        .issue-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.25rem;
+        }
+
+        .issue-description {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .action-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+
+        .action-item.high-priority {
+            background: #fadbd8;
+            border-color: #e74c3c;
+        }
+
+        .action-item.medium-priority {
+            background: #fef9e7;
+            border-color: #f39c12;
+        }
+
+        .action-item.low-priority {
+            background: #ebf5fb;
+            border-color: #3498db;
+        }
+
+        .action-priority {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: white;
+        }
+
+        .action-content {
+            flex: 1;
+        }
+
+        .action-task {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .action-details {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+
+        .reports-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .saved-reports, .quick-reports, .report-templates {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .saved-reports h4, .quick-reports h4, .report-templates h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .saved-report-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .saved-report-item:last-child {
+            border-bottom: none;
+        }
+
+        .report-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .report-date {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+
+        .quick-reports {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .quick-report-btn {
+            background: #f8f9fa;
+            border: 1px solid #ecf0f1;
+            padding: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.3s ease;
+        }
+
+        .quick-report-btn:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-1px);
+        }
+
+        .report-templates {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .template-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .template-item:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .template-icon {
+            font-size: 1.5rem;
+        }
+
+        .template-name {
+            font-weight: 600;
+        }
+
+        .template-desc {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .report-history {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .history-item.completed {
+            border-left: 4px solid #27ae60;
+        }
+
+        .history-item.failed {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .history-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .history-date {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .history-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-text {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        @media (max-width: 768px) {
+            .reports-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .report-filters {
+                flex-direction: column;
+            }
+            
+            .reports-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-range {
+                flex-direction: column;
+            }
+        }
+
+        @media print {
+            .navbar, .reports-controls, .reports-sidebar, .settings-actions {
+                display: none !important;
+            }
+            
+            .reports-dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .report-preview {
+                box-shadow: none;
+                border: 1px solid #ccc;
+            }
+        }
+    </style>
+</body>
+</html>

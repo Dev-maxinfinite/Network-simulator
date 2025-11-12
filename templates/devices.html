@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devices - AI Network Simulator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+    <div class="nav-brand">
+        <h1>🤖 AI Network Simulator</h1>
+    </div>
+    <div class="nav-links">
+        <a href="/" class="active">Dashboard</a>
+        <a href="/topology">Topology</a>
+        <a href="/config">Configuration</a>
+        <a href="/simulation">Simulation</a>
+        <a href="/devices">Devices</a>
+        <a href="/analysis">Analysis</a>
+        <a href="/ml">AI/ML</a>
+        <a href="/logs">Logs</a>
+        <a href="/reports">Reports</a>
+        <a href="/settings">Settings</a>
+        
+        <!-- User Info Section -->
+        <div class="user-info">
+            <span>Welcome, {{ user.name }}</span>
+            <div class="user-dropdown">
+                <button class="btn-user">👤 {{ user.user }}</button>
+                <div class="user-menu">
+                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
+                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+    <div class="container">
+        <div class="section">
+            <h2>📡 Network Devices</h2>
+            
+            <div class="devices-controls">
+                <button class="btn btn-success" onclick="addNewDevice()">➕ Add New Device</button>
+                <button class="btn" onclick="refreshDevices()">🔄 Refresh</button>
+                <button class="btn" onclick="exportDevices()">📥 Export CSV</button>
+                <div class="search-box">
+                    <input type="text" id="search-devices" placeholder="Search devices..." onkeyup="filterDevices()">
+                </div>
+            </div>
+
+            <div class="devices-stats">
+                <div class="stat-item">
+                    <span class="stat-number" id="total-devices">0</span>
+                    <span class="stat-label">Total Devices</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="active-devices">0</span>
+                    <span class="stat-label">Active</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="routers-count">0</span>
+                    <span class="stat-label">Routers</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="switches-count">0</span>
+                    <span class="stat-label">Switches</span>
+                </div>
+            </div>
+
+            <div id="devices-table-container">
+                <!-- Devices table will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Device Details Modal -->
+        <div id="device-modal" class="modal">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <h3 id="modal-title">Device Details</h3>
+                <div id="modal-body">
+                    <!-- Device details will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load devices when page loads
+        document.addEventListener('DOMContentLoaded', loadDevices);
+
+        function loadDevices() {
+            fetch('/api/devices')
+                .then(response => response.json())
+                .then(devices => {
+                    updateDevicesTable(devices);
+                    updateStats(devices);
+                })
+                .catch(error => {
+                    console.error('Error loading devices:', error);
+                    document.getElementById('devices-table-container').innerHTML = 
+                        '<p style="color: red; text-align: center;">Error loading devices</p>';
+                });
+        }
+
+        function updateDevicesTable(devices) {
+            const container = document.getElementById('devices-table-container');
+            
+            if (devices.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 No Devices Found</h3>
+                        <p>No network devices are configured. Click "Add New Device" to get started.</p>
+                        <button class="btn btn-success" onclick="addNewDevice()">➕ Add Your First Device</button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="table-responsive">
+                    <table class="devices-table">
+                        <thead>
+                            <tr>
+                                <th>Device Name</th>
+                                <th>Type</th>
+                                <th>IP Address</th>
+                                <th>Status</th>
+                                <th>CPU Usage</th>
+                                <th>Memory Usage</th>
+                                <th>Interfaces</th>
+                                <th>Last Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            devices.forEach(device => {
+                const cpuClass = device.cpu_usage > 80 ? 'high-usage' : device.cpu_usage > 60 ? 'medium-usage' : 'normal-usage';
+                const memoryClass = device.memory_usage > 85 ? 'high-usage' : device.memory_usage > 70 ? 'medium-usage' : 'normal-usage';
+                
+                html += `
+                    <tr class="device-row" data-device="${device.name.toLowerCase()}">
+                        <td>
+                            <div class="device-name">
+                                <span class="device-icon">
+                                    ${device.device_type === 'router' ? '🔄' : 
+                                      device.device_type === 'switch' ? '🔀' : '💻'}
+                                </span>
+                                <strong>${device.name}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="device-type ${device.device_type}">${device.device_type}</span>
+                        </td>
+                        <td>${device.ip_address || 'N/A'}</td>
+                        <td>
+                            <span class="status ${device.status}">${device.status}</span>
+                        </td>
+                        <td>
+                            <div class="usage-container">
+                                <div class="progress-bar">
+                                    <div class="progress ${cpuClass}" style="width: ${device.cpu_usage}%"></div>
+                                </div>
+                                <span class="usage-value">${device.cpu_usage}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="usage-container">
+                                <div class="progress-bar">
+                                    <div class="progress ${memoryClass}" style="width: ${device.memory_usage}%"></div>
+                                </div>
+                                <span class="usage-value">${device.memory_usage}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="interface-count">${device.interfaces || 0} ports</span>
+                        </td>
+                        <td>${device.last_updated || 'N/A'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-small btn-info" onclick="viewDevice('${device.name}')" title="View Details">👁️</button>
+                                <button class="btn-small btn-warning" onclick="editDevice('${device.name}')" title="Edit">✏️</button>
+                                <button class="btn-small btn-danger" onclick="deleteDevice('${device.name}')" title="Delete">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function updateStats(devices) {
+            const total = devices.length;
+            const active = devices.filter(d => d.status === 'active').length;
+            const routers = devices.filter(d => d.device_type === 'router').length;
+            const switches = devices.filter(d => d.device_type === 'switch').length;
+
+            document.getElementById('total-devices').textContent = total;
+            document.getElementById('active-devices').textContent = active;
+            document.getElementById('routers-count').textContent = routers;
+            document.getElementById('switches-count').textContent = switches;
+        }
+
+        function filterDevices() {
+            const searchTerm = document.getElementById('search-devices').value.toLowerCase();
+            const rows = document.querySelectorAll('.device-row');
+            
+            rows.forEach(row => {
+                const deviceName = row.getAttribute('data-device');
+                if (deviceName.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function addNewDevice() {
+            // For demo - in real app, this would open a form
+            alert('➕ Add New Device feature would open a form here.\n\nIn a real application, this would allow you to:\n• Enter device details\n• Upload configuration\n• Set device type and parameters');
+        }
+
+        function viewDevice(deviceName) {
+            // For demo - show device details
+            document.getElementById('modal-title').textContent = `Device: ${deviceName}`;
+            document.getElementById('modal-body').innerHTML = `
+                <div class="device-details">
+                    <div class="detail-item">
+                        <label>Device Name:</label>
+                        <span>${deviceName}</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Type:</label>
+                        <span>Router</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>IP Address:</label>
+                        <span>192.168.1.1</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Status:</label>
+                        <span class="status active">Active</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Interfaces:</label>
+                        <span>2 interfaces configured</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Configuration:</label>
+                        <pre class="config-preview">hostname ${deviceName}
+interface GigabitEthernet0/0
+ ip address 192.168.1.1 255.255.255.0
+interface GigabitEthernet0/1
+ ip address 10.0.0.1 255.255.255.252</pre>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn" onclick="closeModal()">Close</button>
+                    <button class="btn btn-success" onclick="editDevice('${deviceName}')">Edit Configuration</button>
+                </div>
+            `;
+            document.getElementById('device-modal').style.display = 'block';
+        }
+
+        function editDevice(deviceName) {
+            // Redirect to config page with device pre-selected
+            window.location.href = `/config?device=${deviceName}`;
+        }
+
+        function deleteDevice(deviceName) {
+            if (confirm(`Are you sure you want to delete device "${deviceName}"?`)) {
+                // For demo - in real app, this would call API
+                alert(`Device "${deviceName}" would be deleted in a real application.`);
+                loadDevices(); // Refresh the list
+            }
+        }
+
+        function refreshDevices() {
+            loadDevices();
+            showNotification('Devices list refreshed', 'success');
+        }
+
+        function exportDevices() {
+            // Simple CSV export
+            const devices = [
+                {name: 'R1', type: 'router', ip: '192.168.1.1', status: 'active'},
+                {name: 'R2', type: 'router', ip: '10.0.0.2', status: 'active'},
+                {name: 'SW1', type: 'switch', ip: 'N/A', status: 'active'}
+            ];
+            
+            let csv = 'Device Name,Type,IP Address,Status,CPU%,Memory%,Interfaces\n';
+            devices.forEach(device => {
+                csv += `${device.name},${device.type},${device.ip},${device.status},25,40,2\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'network-devices.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showNotification('Devices exported to CSV', 'success');
+        }
+
+        function closeModal() {
+            document.getElementById('device-modal').style.display = 'none';
+        }
+
+        function showNotification(message, type) {
+            // Simple notification
+            alert(`${type === 'success' ? '✅' : '❌'} ${message}`);
+        }
+    </script>
+
+    <style>
+        .devices-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            margin-left: auto;
+        }
+
+        .search-box input {
+            padding: 0.5rem 1rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 25px;
+            width: 250px;
+        }
+
+        .devices-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #3498db;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .devices-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .devices-table th {
+            background: #34495e;
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .devices-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .device-name {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .device-icon {
+            font-size: 1.2rem;
+        }
+
+        .device-type {
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: capitalize;
+        }
+
+        .device-type.router {
+            background: #d6eaf8;
+            color: #2874a6;
+        }
+
+        .device-type.switch {
+            background: #d5f5e3;
+            color: #239b56;
+        }
+
+        .usage-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-bar {
+            flex: 1;
+            background: #ecf0f1;
+            border-radius: 10px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .progress.normal-usage {
+            background: #2ecc71;
+        }
+
+        .progress.medium-usage {
+            background: #f39c12;
+        }
+
+        .progress.high-usage {
+            background: #e74c3c;
+        }
+
+        .usage-value {
+            font-size: 0.8rem;
+            font-weight: bold;
+            min-width: 35px;
+        }
+
+        .interface-count {
+            background: #ebf5fb;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #3498db;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-info { background: #3498db; color: white; }
+        .btn-warning { background: #f39c12; color: white; }
+        .btn-danger { background: #e74c3c; color: white; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .empty-state h3 {
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        .device-details {
+            margin: 1.5rem 0;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .detail-item label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .config-preview {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .devices-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                margin-left: 0;
+            }
+            
+            .search-box input {
+                width: 100%;
+            }
+            
+            .devices-table {
+                font-size: 0.8rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Network Simulator - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+   <nav class="navbar">
+    <div class="nav-brand">
+        <h1>🤖 AI Network Simulator</h1>
+    </div>
+    <div class="nav-links">
+        <a href="/" class="active">Dashboard</a>
+        <a href="/topology">Topology</a>
+        <a href="/config">Configuration</a>
+        <a href="/simulation">Simulation</a>
+        <a href="/devices">Devices</a>
+        <a href="/analysis">Analysis</a>
+        <a href="/ml">AI/ML</a>
+        <a href="/logs">Logs</a>
+        <a href="/reports">Reports</a>
+        <a href="/settings">Settings</a>
+        
+        <!-- User Info Section -->
+        <div class="user-info">
+            <span>Welcome, {{ user.name }}</span>
+            <div class="user-dropdown">
+                <button class="btn-user">👤 {{ user.user }}</button>
+                <div class="user-menu">
+                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
+                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+    <!-- Main Content -->
+    <div class="container">
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Devices</h3>
+                <div class="stat-value" id="total-devices">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Active Links</h3>
+                <div class="stat-value" id="active-links">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Network Health</h3>
+                <div class="stat-value" id="network-health">100%</div>
+            </div>
+            <div class="stat-card">
+                <h3>Anomalies</h3>
+                <div class="stat-value" id="anomalies-count">0</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="actions-grid">
+            <div class="action-card" onclick="location.href='/topology'">
+                <h3>🌐 View Topology</h3>
+                <p>Visualize network topology</p>
+            </div>
+            <div class="action-card" onclick="location.href='/config'">
+                <h3>⚙️ Configure</h3>
+                <p>Edit device configurations</p>
+            </div>
+            <div class="action-card" onclick="location.href='/simulation'">
+                <h3>🎮 Start Simulation</h3>
+                <p>Run network simulation</p>
+            </div>
+            <div class="action-card" onclick="location.href='/analysis'">
+                <h3>📊 Analyze</h3>
+                <p>Network performance analysis</p>
+            </div>
+        </div>
+
+        <!-- Recent Devices -->
+        <div class="section">
+            <h2>📡 Network Devices</h2>
+            <div class="devices-table" id="devices-table">
+                <!-- Devices will be loaded here -->
+            </div>
+        </div>
+
+        <!-- Topology Preview -->
+        <div class="section">
+            <h2>🔗 Topology Overview</h2>
+            <div class="topology-preview">
+                <img id="topology-image" src="" alt="Network Topology" style="max-width: 100%;">
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Load dashboard data
+        loadDashboardData();
+        
+        function loadDashboardData() {
+            fetch('/api/topology')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('total-devices').textContent = data.nodes.length;
+                    document.getElementById('active-links').textContent = data.links.length;
+                    document.getElementById('topology-image').src = 'data:image/png;base64,' + data.topology_image;
+                });
+            
+            fetch('/api/devices')
+                .then(response => response.json())
+                .then(devices => {
+                    updateDevicesTable(devices);
+                });
+        }
+        
+        function updateDevicesTable(devices) {
+            const table = document.getElementById('devices-table');
+            if (devices.length === 0) {
+                table.innerHTML = '<p>No devices configured</p>';
+                return;
+            }
+            
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Device</th>
+                            <th>Type</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                            <th>CPU</th>
+                            <th>Memory</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            devices.forEach(device => {
+                html += `
+                    <tr>
+                        <td>${device.name}</td>
+                        <td>${device.device_type}</td>
+                        <td>${device.ip_address}</td>
+                        <td><span class="status ${device.status}">${device.status}</span></td>
+                        <td><div class="progress-bar"><div class="progress" style="width: ${device.cpu_usage}%"></div>${device.cpu_usage}%</div></td>
+                        <td><div class="progress-bar"><div class="progress" style="width: ${device.memory_usage}%"></div>${device.memory_usage}%</div></td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            table.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

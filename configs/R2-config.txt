@@ -1,0 +1,16 @@
+hostname R2
+!
+interface GigabitEthernet0/0
+ description Connected to R1 interface GigabitEthernet0/1
+ ip address 10.0.0.2 255.255.255.252
+ mtu 1500
+ speed 1000
+!
+interface GigabitEthernet0/1
+ description Connected to Internet
+ ip address 203.0.113.1 255.255.255.0
+ mtu 1500
+ speed 1000
+!
+router ospf 1
+ network 10.0.0.0 0.0.0.3 area 0

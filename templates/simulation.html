@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulation - AI Network Simulator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+    <div class="nav-brand">
+        <h1>🤖 AI Network Simulator</h1>
+    </div>
+    <div class="nav-links">
+        <a href="/" class="active">Dashboard</a>
+        <a href="/topology">Topology</a>
+        <a href="/config">Configuration</a>
+        <a href="/simulation">Simulation</a>
+        <a href="/devices">Devices</a>
+        <a href="/analysis">Analysis</a>
+        <a href="/ml">AI/ML</a>
+        <a href="/logs">Logs</a>
+        <a href="/reports">Reports</a>
+        <a href="/settings">Settings</a>
+        
+        <!-- User Info Section -->
+        <div class="user-info">
+            <span>Welcome, {{ user.name }}</span>
+            <div class="user-dropdown">
+                <button class="btn-user">👤 {{ user.user }}</button>
+                <div class="user-menu">
+                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
+                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+    <div class="container">
+        <div class="section">
+            <h2>🎮 Network Simulation</h2>
+            
+            <div class="simulation-controls">
+                <div class="control-group">
+                    <label>Simulation Type:</label>
+                    <select id="simulation-type">
+                        <option value="basic">Basic Network</option>
+                        <option value="ospf">OSPF Routing</option>
+                        <option value="vlan">VLAN Network</option>
+                        <option value="failure">Link Failure</option>
+                    </select>
+                </div>
+                
+                <div class="control-group">
+                    <label>Duration (seconds):</label>
+                    <input type="number" id="simulation-duration" value="60" min="10" max="300">
+                </div>
+                
+                <button class="btn btn-success" onclick="startSimulation()">🚀 Start Simulation</button>
+                <button class="btn btn-danger" onclick="stopSimulation()">⏹️ Stop Simulation</button>
+                <button class="btn" onclick="resetSimulation()">🔄 Reset</button>
+            </div>
+
+            <div class="simulation-status">
+                <h3>Status: <span id="sim-status">Ready</span></h3>
+                <div class="progress-bar-large">
+                    <div id="simulation-progress" class="progress" style="width: 0%"></div>
+                </div>
+                <p id="simulation-message">Click Start to begin simulation</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>📊 Real-time Metrics</h3>
+            <div id="simulation-metrics" class="metrics-grid">
+                <!-- Metrics will be loaded here -->
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>⚠️ Anomaly Detection</h3>
+            <div id="anomalies-list">
+                <!-- Anomalies will appear here -->
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🎯 Simulation Scenarios</h3>
+            <div class="scenarios-grid">
+                <div class="scenario-card" onclick="loadScenario('link_failure')">
+                    <h4>🔗 Link Failure</h4>
+                    <p>Simulate network link failure and recovery</p>
+                </div>
+                <div class="scenario-card" onclick="loadScenario('high_traffic')">
+                    <h4>📈 High Traffic</h4>
+                    <p>Simulate network congestion</p>
+                </div>
+                <div class="scenario-card" onclick="loadScenario('security_attack')">
+                    <h4>🛡️ Security Attack</h4>
+                    <p>Simulate DDoS attack scenario</p>
+                </div>
+                <div class="scenario-card" onclick="loadScenario('device_failure')">
+                    <h4>💀 Device Failure</h4>
+                    <p>Simulate router/switch failure</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let simulationInterval;
+        let simulationTime = 0;
+        let totalDuration = 60;
+
+        function startSimulation() {
+            const type = document.getElementById('simulation-type').value;
+            totalDuration = parseInt(document.getElementById('simulation-duration').value);
+            
+            document.getElementById('sim-status').textContent = 'Running';
+            document.getElementById('sim-status').style.color = '#27ae60';
+            document.getElementById('simulation-message').textContent = `${type} simulation running...`;
+            
+            // Start progress simulation
+            simulationTime = 0;
+            updateProgress();
+            simulationInterval = setInterval(updateProgress, 1000);
+            
+            // Get simulation data
+            fetch('/api/start-simulation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ type: type })
+            })
+            .then(response => response.json())
+            .then(data => {
+                updateMetrics(data.devices);
+                updateAnomalies(data.anomalies);
+            })
+            .catch(error => {
+                console.error('Error starting simulation:', error);
+            });
+        }
+
+        function stopSimulation() {
+            clearInterval(simulationInterval);
+            document.getElementById('sim-status').textContent = 'Stopped';
+            document.getElementById('sim-status').style.color = '#e74c3c';
+            document.getElementById('simulation-message').textContent = 'Simulation stopped by user';
+        }
+
+        function resetSimulation() {
+            clearInterval(simulationInterval);
+            simulationTime = 0;
+            document.getElementById('simulation-progress').style.width = '0%';
+            document.getElementById('sim-status').textContent = 'Ready';
+            document.getElementById('sim-status').style.color = '#2c3e50';
+            document.getElementById('simulation-message').textContent = 'Click Start to begin simulation';
+            document.getElementById('simulation-metrics').innerHTML = '<p>No simulation data</p>';
+            document.getElementById('anomalies-list').innerHTML = '<p>No anomalies detected</p>';
+        }
+
+        function updateProgress() {
+            simulationTime++;
+            const progress = (simulationTime / totalDuration) * 100;
+            document.getElementById('simulation-progress').style.width = Math.min(progress, 100) + '%';
+            
+            if (simulationTime >= totalDuration) {
+                stopSimulation();
+                document.getElementById('simulation-message').textContent = 'Simulation completed successfully!';
+            }
+        }
+
+        function updateMetrics(devices) {
+            const metricsDiv = document.getElementById('simulation-metrics');
+            
+            if (!devices || Object.keys(devices).length === 0) {
+                metricsDiv.innerHTML = '<p>No device data available</p>';
+                return;
+            }
+            
+            let html = '';
+            for (const [device, data] of Object.entries(devices)) {
+                html += `
+                    <div class="metric-card">
+                        <h4>${device}</h4>
+                        <div class="metric">
+                            <label>CPU Usage:</label>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: ${data.cpu_usage}%"></div>
+                                <span>${data.cpu_usage}%</span>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <label>Memory Usage:</label>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: ${data.memory_usage}%"></div>
+                                <span>${data.memory_usage}%</span>
+                            </div>
+                        </div>
+                        <div class="metric">
+                            <label>Status:</label>
+                            <span class="status ${data.status}">${data.status}</span>
+                        </div>
+                        <div class="metric">
+                            <label>Packets:</label>
+                            <span>${data.packets_processed || 0}</span>
+                        </div>
+                    </div>
+                `;
+            }
+            metricsDiv.innerHTML = html;
+        }
+
+        function updateAnomalies(anomalies) {
+            const anomaliesDiv = document.getElementById('anomalies-list');
+            
+            if (!anomalies || anomalies.length === 0) {
+                anomaliesDiv.innerHTML = '<div class="no-anomalies">✅ No anomalies detected</div>';
+                return;
+            }
+            
+            let html = '<div class="anomalies-list">';
+            anomalies.forEach(anomaly => {
+                html += `
+                    <div class="anomaly-item">
+                        <span class="anomaly-icon">⚠️</span>
+                        <span class="anomaly-text">${anomaly}</span>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            anomaliesDiv.innerHTML = html;
+        }
+
+        function loadScenario(scenario) {
+            const scenarios = {
+                'link_failure': {
+                    type: 'failure',
+                    duration: 45,
+                    message: 'Link failure scenario loaded. This will simulate network link disruption and automatic recovery.'
+                },
+                'high_traffic': {
+                    type: 'basic', 
+                    duration: 90,
+                    message: 'High traffic scenario loaded. This will simulate network congestion and performance impact.'
+                },
+                'security_attack': {
+                    type: 'basic',
+                    duration: 120,
+                    message: 'Security attack scenario loaded. This will simulate DDoS attack patterns.'
+                },
+                'device_failure': {
+                    type: 'failure',
+                    duration: 60,
+                    message: 'Device failure scenario loaded. This will simulate router/switch failure and network impact.'
+                }
+            };
+            
+            const scenarioData = scenarios[scenario];
+            if (scenarioData) {
+                document.getElementById('simulation-type').value = scenarioData.type;
+                document.getElementById('simulation-duration').value = scenarioData.duration;
+                document.getElementById('simulation-message').textContent = scenarioData.message;
+            }
+        }
+    </script>
+
+    <style>
+        .simulation-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .simulation-status {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+        }
+
+        .progress-bar-large {
+            height: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .progress-bar-large .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #2ecc71, #3498db);
+            transition: width 0.3s ease;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .metric {
+            margin-bottom: 1rem;
+        }
+
+        .metric label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .scenario-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .scenario-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-color: #3498db;
+        }
+
+        .anomalies-list {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .anomaly-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem;
+            border-bottom: 1px solid #ffeaa7;
+        }
+
+        .anomaly-item:last-child {
+            border-bottom: none;
+        }
+
+        .no-anomalies {
+            text-align: center;
+            color: #27ae60;
+            font-weight: 600;
+            padding: 2rem;
+        }
+    </style>
+</body>
+</html>
