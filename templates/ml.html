@@ -3,97 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI/ML Features - AI Network Simulator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>AI/ML - AI Network Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-   <nav class="navbar">
-    <div class="nav-brand">
-        <h1>🤖 AI Network Simulator</h1>
-    </div>
-    <div class="nav-links">
-        <a href="/" class="active">Dashboard</a>
-        <a href="/topology">Topology</a>
-        <a href="/config">Configuration</a>
-        <a href="/simulation">Simulation</a>
-        <a href="/devices">Devices</a>
-        <a href="/analysis">Analysis</a>
-        <a href="/ml">AI/ML</a>
-        <a href="/logs">Logs</a>
-        <a href="/reports">Reports</a>
-        <a href="/settings">Settings</a>
-        
-        <!-- User Info Section -->
-        <div class="user-info">
-            <span>Welcome, {{ user.name }}</span>
-            <div class="user-dropdown">
-                <button class="btn-user">👤 {{ user.user }}</button>
-                <div class="user-menu">
-                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
-                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
+                        <i class="fas fa-brain text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">AI Network Simulator</h1>
+                        <p class="text-xs text-gray-500">Intelligent Network Management</p>
+                    </div>
+                </div>
+                
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-blue-500 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="/" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    <a href="/ml" class="px-4 py-2 rounded-lg bg-blue-500 text-white font-medium flex items-center">
+                        <i class="fas fa-robot mr-2"></i>AI/ML
+                    </a>
+                    <a href="/analysis" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-chart-bar mr-2"></i>Analysis
+                    </a>
+                    <div class="relative group ml-4">
+                        <button class="flex items-center space-x-2 bg-gray-100 rounded-lg px-3 py-2 hover:bg-gray-200 transition-colors">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">{{ user.user[0] }}</span>
+                            </div>
+                            <span class="text-gray-700 font-medium">{{ user.user }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-    <div class="container">
-        <div class="section">
-            <h2>🧠 AI/ML Network Intelligence</h2>
-            
-            <div class="ml-controls">
-                <button class="btn btn-success" onclick="trainModels()">🎯 Train AI Models</button>
-                <button class="btn" onclick="runPredictions()">🔮 Run Predictions</button>
-                <button class="btn" onclick="detectAnomalies()">⚠️ Detect Anomalies</button>
-                <button class="btn" onclick="generateInsights()">💡 Generate Insights</button>
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">AI/ML Engine 🤖</h2>
+                    <p class="text-gray-600 mt-2">Intelligent network analysis and predictions</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <div class="flex space-x-3">
+                        <button onclick="trainModels()" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center">
+                            <i class="fas fa-brain mr-2"></i>Train Models
+                        </button>
+                        <button onclick="runPredictions()" class="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 flex items-center">
+                            <i class="fas fa-bolt mr-2"></i>Run Predictions
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Models Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Anomaly Detection -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-gray-800">Anomaly Detection</h3>
+                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Active</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">Detects unusual network patterns and potential threats</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span>Accuracy:</span>
+                        <span class="font-medium">94.2%</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Last Training:</span>
+                        <span class="font-medium">2 hours ago</span>
+                    </div>
+                </div>
+                <button onclick="runAnomalyDetection()" class="w-full mt-4 bg-red-500 text-white py-2 rounded-lg text-sm hover:bg-red-600">
+                    Run Detection
+                </button>
             </div>
 
-            <div class="ml-status">
-                <h3>AI Model Status</h3>
-                <div class="models-grid" id="models-status">
-                    <!-- Models status will be loaded here -->
+            <!-- Traffic Prediction -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-gray-800">Traffic Prediction</h3>
+                    <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Active</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">Predicts network traffic patterns and bandwidth needs</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span>Accuracy:</span>
+                        <span class="font-medium">88.7%</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Last Training:</span>
+                        <span class="font-medium">6 hours ago</span>
+                    </div>
+                </div>
+                <button onclick="predictTraffic()" class="w-full mt-4 bg-blue-500 text-white py-2 rounded-lg text-sm hover:bg-blue-600">
+                    Predict Traffic
+                </button>
+            </div>
+
+            <!-- Security Analysis -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="font-semibold text-gray-800">Security Analysis</h3>
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Training</span>
+                </div>
+                <p class="text-sm text-gray-600 mb-4">Identifies potential security vulnerabilities</p>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span>Accuracy:</span>
+                        <span class="font-medium">91.5%</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span>Last Training:</span>
+                        <span class="font-medium">In progress</span>
+                    </div>
+                </div>
+                <button onclick="analyzeSecurity()" class="w-full mt-4 bg-purple-500 text-white py-2 rounded-lg text-sm hover:bg-purple-600">
+                    Analyze Security
+                </button>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Model Performance -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Model Performance</h3>
+                <div class="h-64">
+                    <canvas id="modelPerformanceChart"></canvas>
                 </div>
             </div>
 
-            <div class="ml-features">
-                <div class="feature-section">
-                    <h3>📊 Traffic Prediction</h3>
-                    <div class="prediction-container">
-                        <div class="prediction-chart" id="traffic-prediction">
-                            <!-- Traffic prediction chart -->
+            <!-- Anomaly Detection Results -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Anomaly Detection</h3>
+                <div class="h-64">
+                    <canvas id="anomalyChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Predictions -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800">Recent Predictions & Insights</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="flex items-start p-4 bg-blue-50 rounded-lg">
+                        <i class="fas fa-chart-line text-blue-500 mt-1 mr-3"></i>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Traffic Prediction</h4>
+                            <p class="text-sm text-gray-600">Expected 25% increase in network traffic during 2PM-4PM today</p>
+                            <p class="text-xs text-gray-500 mt-1">Confidence: 87% • Generated 30 mins ago</p>
                         </div>
-                        <div class="prediction-stats">
-                            <h4>Prediction Results</h4>
-                            <div id="prediction-results">
-                                <p>Run prediction to see results</p>
-                            </div>
+                    </div>
+                    <div class="flex items-start p-4 bg-red-50 rounded-lg">
+                        <i class="fas fa-exclamation-triangle text-red-500 mt-1 mr-3"></i>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Anomaly Detected</h4>
+                            <p class="text-sm text-gray-600">Unusual traffic pattern detected from R2 to external IP 203.0.113.45</p>
+                            <p class="text-xs text-gray-500 mt-1">Severity: High • Detected 15 mins ago</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start p-4 bg-green-50 rounded-lg">
+                        <i class="fas fa-lightbulb text-green-500 mt-1 mr-3"></i>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Optimization Suggestion</h4>
+                            <p class="text-sm text-gray-600">Consider load balancing configuration for better SW1 performance</p>
+                            <p class="text-xs text-gray-500 mt-1">Impact: Medium • Generated 1 hour ago</p>
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <div class="feature-section">
-                    <h3>⚠️ Anomaly Detection</h3>
-                    <div class="anomaly-container">
-                        <div class="anomaly-stats" id="anomaly-stats">
-                            <!-- Anomaly statistics -->
+        <!-- Model Training Status -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden mt-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800">Model Training Status</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="font-medium">Anomaly Detection Model</span>
+                            <span>85%</span>
                         </div>
-                        <div class="anomaly-list" id="anomaly-list">
-                            <!-- Detected anomalies -->
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-red-500 h-2 rounded-full" style="width: 85%"></div>
                         </div>
                     </div>
-                </div>
-
-                <div class="feature-section">
-                    <h3>🎯 Optimization Recommendations</h3>
-                    <div class="recommendations" id="ml-recommendations">
-                        <!-- AI recommendations -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="font-medium">Traffic Prediction Model</span>
+                            <span>60%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-500 h-2 rounded-full" style="width: 60%"></div>
+                        </div>
                     </div>
-                </div>
-
-                <div class="feature-section">
-                    <h3>📈 Performance Insights</h3>
-                    <div class="insights-grid" id="ai-insights">
-                        <!-- AI insights -->
+                    <div>
+                        <div class="flex justify-between text-sm mb-2">
+                            <span class="font-medium">Security Analysis Model</span>
+                            <span>45%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-purple-500 h-2 rounded-full" style="width: 45%"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -101,619 +237,121 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            loadModelsStatus();
-        });
-
-        function loadModelsStatus() {
-            const models = [
-                { name: 'Traffic Predictor', status: 'trained', accuracy: '92%', lastUpdated: '2 hours ago' },
-                { name: 'Anomaly Detector', status: 'trained', accuracy: '88%', lastUpdated: '1 day ago' },
-                { name: 'Failure Predictor', status: 'training', accuracy: '75%', lastUpdated: 'Just now' },
-                { name: 'Optimization Engine', status: 'ready', accuracy: '85%', lastUpdated: '3 days ago' }
-            ];
-
-            const modelsDiv = document.getElementById('models-status');
-            let html = '';
-            
-            models.forEach(model => {
-                const statusClass = model.status === 'trained' ? 'trained' : 
-                                 model.status === 'training' ? 'training' : 'ready';
-                const statusIcon = model.status === 'trained' ? '✅' : 
-                                model.status === 'training' ? '🔄' : '⚡';
-                
-                html += `
-                    <div class="model-card ${statusClass}">
-                        <div class="model-header">
-                            <h4>${model.name}</h4>
-                            <span class="model-status">${statusIcon} ${model.status}</span>
-                        </div>
-                        <div class="model-details">
-                            <div class="model-metric">
-                                <label>Accuracy:</label>
-                                <span>${model.accuracy}</span>
-                            </div>
-                            <div class="model-metric">
-                                <label>Last Updated:</label>
-                                <span>${model.lastUpdated}</span>
-                            </div>
-                        </div>
-                        <div class="model-actions">
-                            <button class="btn-small" onclick="retrainModel('${model.name}')">Retrain</button>
-                            <button class="btn-small btn-info" onclick="viewModelDetails('${model.name}')">Details</button>
-                        </div>
-                    </div>
-                `;
+        // Initialize Charts
+        function initializeCharts() {
+            // Model Performance Chart
+            const modelCtx = document.getElementById('modelPerformanceChart').getContext('2d');
+            new Chart(modelCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score', 'Speed', 'Reliability'],
+                    datasets: [{
+                        label: 'Anomaly Detection',
+                        data: [94, 92, 95, 93, 88, 96],
+                        borderColor: '#EF4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)'
+                    }, {
+                        label: 'Traffic Prediction',
+                        data: [89, 87, 90, 88, 85, 92],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.2)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
             });
-            
-            modelsDiv.innerHTML = html;
+
+            // Anomaly Chart
+            const anomalyCtx = document.getElementById('anomalyChart').getContext('2d');
+            new Chart(anomalyCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Anomalies Detected',
+                        data: [12, 19, 8, 15, 22, 5, 9],
+                        backgroundColor: '#EF4444'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
         }
 
         function trainModels() {
-            showLoading('models-status', 'Training AI models...');
+            showNotification('Starting model training... This may take several minutes.', 'info');
             
-            setTimeout(() => {
-                loadModelsStatus();
-                showNotification('AI models trained successfully!', 'success');
-                
-                // Update models with better accuracy
-                document.querySelectorAll('.model-card').forEach(card => {
-                    const accuracySpan = card.querySelector('.model-metric span');
-                    if (accuracySpan) {
-                        const currentAcc = parseInt(accuracySpan.textContent);
-                        if (currentAcc < 95) {
-                            accuracySpan.textContent = (currentAcc + 3) + '%';
-                        }
-                    }
-                });
-            }, 2000);
+            // Simulate training progress
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 5;
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    showNotification('Model training completed successfully!', 'success');
+                }
+            }, 500);
         }
 
         function runPredictions() {
-            showLoading('traffic-prediction', 'Running traffic predictions...');
-            showLoading('prediction-results', 'Analyzing network patterns...');
+            showNotification('Running AI predictions on network data...', 'info');
             
+            // Simulate prediction process
             setTimeout(() => {
-                // Generate prediction chart
-                const predictionDiv = document.getElementById('traffic-prediction');
-                predictionDiv.innerHTML = `
-                    <div class="chart-placeholder">
-                        <h4>Traffic Prediction (Next 24 Hours)</h4>
-                        <div class="prediction-bars">
-                            <div class="bar" style="height: 40%"><span>2AM</span></div>
-                            <div class="bar" style="height: 25%"><span>6AM</span></div>
-                            <div class="bar" style="height: 60%"><span>10AM</span></div>
-                            <div class="bar" style="height: 85%"><span>2PM</span></div>
-                            <div class="bar" style="height: 95%"><span>6PM</span></div>
-                            <div class="bar" style="height: 70%"><span>10PM</span></div>
-                        </div>
-                    </div>
-                `;
+                showNotification('Predictions completed! Check insights below.', 'success');
                 
-                // Update prediction results
-                const resultsDiv = document.getElementById('prediction-results');
-                resultsDiv.innerHTML = `
-                    <div class="prediction-result-item">
-                        <label>Peak Hours:</label>
-                        <span>2PM - 6PM (95% utilization)</span>
-                    </div>
-                    <div class="prediction-result-item">
-                        <label>Recommended Action:</label>
-                        <span>Enable load balancing at 1PM</span>
-                    </div>
-                    <div class="prediction-result-item">
-                        <label>Confidence Level:</label>
-                        <span>92%</span>
-                    </div>
-                    <div class="prediction-result-item">
-                        <label>Potential Bottleneck:</label>
-                        <span>R1-R2 link (predicted 85% load)</span>
-                    </div>
-                `;
-                
-                showNotification('Traffic predictions generated successfully!', 'success');
-            }, 1500);
-        }
-
-        function detectAnomalies() {
-            showLoading('anomaly-stats', 'Scanning for anomalies...');
-            showLoading('anomaly-list', 'Analyzing network behavior...');
-            
-            setTimeout(() => {
-                // Update anomaly stats
-                const statsDiv = document.getElementById('anomaly-stats');
-                statsDiv.innerHTML = `
-                    <div class="anomaly-stat-card">
-                        <div class="stat-value">3</div>
-                        <div class="stat-label">Anomalies Detected</div>
-                    </div>
-                    <div class="anomaly-stat-card critical">
-                        <div class="stat-value">1</div>
-                        <div class="stat-label">Critical</div>
-                    </div>
-                    <div class="anomaly-stat-card warning">
-                        <div class="stat-value">2</div>
-                        <div class="stat-label">Warnings</div>
-                    </div>
-                    <div class="anomaly-stat-card">
-                        <div class="stat-value">88%</div>
-                        <div class="stat-label">Detection Accuracy</div>
-                    </div>
-                `;
-                
-                // Update anomaly list
-                const listDiv = document.getElementById('anomaly-list');
-                listDiv.innerHTML = `
-                    <div class="anomaly-item critical">
-                        <div class="anomaly-icon">🔴</div>
-                        <div class="anomaly-content">
-                            <div class="anomaly-title">High CPU Spike - Router R1</div>
-                            <div class="anomaly-desc">CPU usage reached 95% at 14:30, unusual pattern detected</div>
-                            <div class="anomaly-time">Detected 5 minutes ago</div>
-                        </div>
-                    </div>
-                    <div class="anomaly-item warning">
-                        <div class="anomaly-icon">🟡</div>
-                        <div class="anomaly-content">
-                            <div class="anomaly-title">Unusual Traffic Pattern - Switch SW1</div>
-                            <div class="anomaly-desc">Port 1/2 showing broadcast storm patterns</div>
-                            <div class="anomaly-time">Detected 15 minutes ago</div>
-                        </div>
-                    </div>
-                    <div class="anomaly-item warning">
-                        <div class="anomaly-icon">🟡</div>
-                        <div class="anomaly-content">
-                            <div class="anomaly-title">Latency Increase - R2 Internet Link</div>
-                            <div class="anomaly-desc">Latency increased by 150% in last hour</div>
-                            <div class="anomaly-time">Detected 30 minutes ago</div>
-                        </div>
-                    </div>
-                `;
-                
-                showNotification('Anomaly detection completed! 3 issues found.', 'warning');
+                // Update charts with new data
+                initializeCharts();
             }, 2000);
         }
 
-        function generateInsights() {
-            showLoading('ml-recommendations', 'Generating AI insights...');
-            showLoading('ai-insights', 'Analyzing optimization opportunities...');
-            
+        function runAnomalyDetection() {
+            showNotification('Running anomaly detection...', 'info');
             setTimeout(() => {
-                // Update recommendations
-                const recDiv = document.getElementById('ml-recommendations');
-                recDiv.innerHTML = `
-                    <div class="recommendation-item high">
-                        <div class="rec-icon">🚨</div>
-                        <div class="rec-content">
-                            <div class="rec-title">Immediate Action Required</div>
-                            <div class="rec-desc">Router R1 CPU consistently above 90%. Consider hardware upgrade or load redistribution.</div>
-                        </div>
-                    </div>
-                    <div class="recommendation-item medium">
-                        <div class="rec-icon">⚡</div>
-                        <div class="rec-content">
-                            <div class="rec-title">Performance Optimization</div>
-                            <div class="rec-desc">Enable OSPF load balancing on R1-R2 link to distribute traffic evenly.</div>
-                        </div>
-                    </div>
-                    <div class="recommendation-item low">
-                        <div class="rec-icon">💡</div>
-                        <div class="rec-content">
-                            <div class="rec-title">Efficiency Improvement</div>
-                            <div class="rec-desc">Adjust QoS policies to prioritize business-critical applications during peak hours.</div>
-                        </div>
-                    </div>
-                `;
-                
-                // Update insights
-                const insightsDiv = document.getElementById('ai-insights');
-                insightsDiv.innerHTML = `
-                    <div class="insight-card">
-                        <div class="insight-icon">📈</div>
-                        <div class="insight-content">
-                            <h4>Traffic Patterns</h4>
-                            <p>Network traffic follows predictable daily patterns with 45% variation between peak and off-peak hours.</p>
-                        </div>
-                    </div>
-                    <div class="insight-card">
-                        <div class="insight-icon">🛡️</div>
-                        <div class="insight-content">
-                            <h4>Security Baseline</h4>
-                            <p>Network behavior within normal parameters. No suspicious activity detected in last 7 days.</p>
-                        </div>
-                    </div>
-                    <div class="insight-card">
-                        <div class="insight-icon">💰</div>
-                        <div class="insight-content">
-                            <h4>Cost Optimization</h4>
-                            <p>25% bandwidth utilization during off-peak hours suggests potential for cost savings.</p>
-                        </div>
-                    </div>
-                    <div class="insight-card">
-                        <div class="insight-icon">🔮</div>
-                        <div class="insight-content">
-                            <h4>Future Planning</h4>
-                            <p>Current growth rate suggests need for capacity upgrade in 6-8 months.</p>
-                        </div>
-                    </div>
-                `;
-                
-                showNotification('AI insights generated successfully!', 'success');
-            }, 1800);
+                showNotification('Anomaly detection completed. 3 new anomalies found.', 'success');
+            }, 1500);
         }
 
-        function retrainModel(modelName) {
-            showNotification(`Retraining ${modelName}...`, 'info');
+        function predictTraffic() {
+            showNotification('Predicting network traffic patterns...', 'info');
             setTimeout(() => {
-                showNotification(`${modelName} retrained successfully!`, 'success');
-            }, 3000);
+                showNotification('Traffic prediction completed. Peak hours identified.', 'success');
+            }, 1500);
         }
 
-        function viewModelDetails(modelName) {
-            alert(`Model Details: ${modelName}\n\nThis model uses machine learning algorithms to analyze network patterns and provide intelligent insights.`);
-        }
-
-        function showLoading(elementId, message) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                element.innerHTML = `<div class="loading-message">${message}</div>`;
-            }
+        function analyzeSecurity() {
+            showNotification('Analyzing network security...', 'info');
+            setTimeout(() => {
+                showNotification('Security analysis completed. 2 vulnerabilities found.', 'warning');
+            }, 1500);
         }
 
         function showNotification(message, type) {
-            // Simple notification using alert
-            const icon = type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
-            alert(`${icon} ${message}`);
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'info' ? 'bg-blue-500' : 
+                type === 'warning' ? 'bg-yellow-500' : 'bg-red-500'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeCharts);
     </script>
-
-    <style>
-        .ml-controls {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .ml-status {
-            margin-bottom: 2rem;
-        }
-
-        .models-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .model-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            border-left: 4px solid;
-        }
-
-        .model-card.trained {
-            border-left-color: #27ae60;
-        }
-
-        .model-card.training {
-            border-left-color: #f39c12;
-        }
-
-        .model-card.ready {
-            border-left-color: #3498db;
-        }
-
-        .model-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .model-header h4 {
-            margin: 0;
-            color: #2c3e50;
-        }
-
-        .model-status {
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 0.25rem 0.75rem;
-            border-radius: 15px;
-            background: #ecf0f1;
-        }
-
-        .model-details {
-            margin-bottom: 1rem;
-        }
-
-        .model-metric {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .model-metric label {
-            color: #7f8c8d;
-        }
-
-        .model-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .btn-small {
-            padding: 0.25rem 0.75rem;
-            font-size: 0.8rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .feature-section {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .feature-section h3 {
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 0.5rem;
-        }
-
-        .prediction-container {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-        }
-
-        .prediction-chart {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 8px;
-            min-height: 200px;
-        }
-
-        .chart-placeholder {
-            text-align: center;
-        }
-
-        .prediction-bars {
-            display: flex;
-            justify-content: space-around;
-            align-items: end;
-            height: 150px;
-            margin-top: 1rem;
-        }
-
-        .bar {
-            background: linear-gradient(to top, #3498db, #2ecc71);
-            width: 40px;
-            border-radius: 4px 4px 0 0;
-            position: relative;
-            transition: height 0.3s ease;
-        }
-
-        .bar span {
-            position: absolute;
-            bottom: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.8rem;
-            color: #7f8c8d;
-        }
-
-        .prediction-stats {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 8px;
-        }
-
-        .prediction-result-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 1rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #ecf0f1;
-        }
-
-        .prediction-result-item label {
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .anomaly-container {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 2rem;
-        }
-
-        .anomaly-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-        }
-
-        .anomaly-stat-card {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 8px;
-            text-align: center;
-            border: 2px solid transparent;
-        }
-
-        .anomaly-stat-card.critical {
-            border-color: #e74c3c;
-            background: #fadbd8;
-        }
-
-        .anomaly-stat-card.warning {
-            border-color: #f39c12;
-            background: #fef9e7;
-        }
-
-        .anomaly-stat-card .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .anomaly-stat-card .stat-label {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-
-        .anomaly-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .anomaly-item {
-            display: flex;
-            gap: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid;
-        }
-
-        .anomaly-item.critical {
-            background: #fadbd8;
-            border-color: #e74c3c;
-        }
-
-        .anomaly-item.warning {
-            background: #fef9e7;
-            border-color: #f39c12;
-        }
-
-        .anomaly-icon {
-            font-size: 1.5rem;
-        }
-
-        .anomaly-title {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 0.25rem;
-        }
-
-        .anomaly-desc {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .anomaly-time {
-            color: #95a5a6;
-            font-size: 0.8rem;
-        }
-
-        .recommendations {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .recommendation-item {
-            display: flex;
-            gap: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid;
-        }
-
-        .recommendation-item.high {
-            background: #fadbd8;
-            border-color: #e74c3c;
-        }
-
-        .recommendation-item.medium {
-            background: #fef9e7;
-            border-color: #f39c12;
-        }
-
-        .recommendation-item.low {
-            background: #ebf5fb;
-            border-color: #3498db;
-        }
-
-        .rec-icon {
-            font-size: 1.5rem;
-        }
-
-        .rec-title {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 0.25rem;
-        }
-
-        .rec-desc {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-
-        .insights-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .insight-card {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 8px;
-            text-align: center;
-            border: 2px solid #3498db;
-        }
-
-        .insight-icon {
-            font-size: 2rem;
-            margin-bottom: 1rem;
-        }
-
-        .insight-content h4 {
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-        }
-
-        .insight-content p {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .loading-message {
-            text-align: center;
-            padding: 2rem;
-            color: #7f8c8d;
-            font-style: italic;
-        }
-
-        @media (max-width: 768px) {
-            .prediction-container,
-            .anomaly-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .anomaly-stats {
-                grid-template-columns: 1fr;
-            }
-            
-            .models-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .insights-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
 </body>
 </html>

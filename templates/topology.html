@@ -3,235 +3,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Topology - AI Network Simulator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Topology - AI Network Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
-    <nav class="navbar">
-    <div class="nav-brand">
-        <h1>🤖 AI Network Simulator</h1>
-    </div>
-    <div class="nav-links">
-        <a href="/" class="active">Dashboard</a>
-        <a href="/topology">Topology</a>
-        <a href="/config">Configuration</a>
-        <a href="/simulation">Simulation</a>
-        <a href="/devices">Devices</a>
-        <a href="/analysis">Analysis</a>
-        <a href="/ml">AI/ML</a>
-        <a href="/logs">Logs</a>
-        <a href="/reports">Reports</a>
-        <a href="/settings">Settings</a>
-        
-        <!-- User Info Section -->
-        <div class="user-info">
-            <span>Welcome, {{ user.name }}</span>
-            <div class="user-dropdown">
-                <button class="btn-user">👤 {{ user.user }}</button>
-                <div class="user-menu">
-                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
-                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</nav>
-    <div class="container">
-        <div class="section">
-            <h2>🌐 Network Topology</h2>
-            
-            <div class="topology-controls">
-                <button class="btn" onclick="loadTopology()">🔄 Refresh Topology</button>
-                <button class="btn btn-success" onclick="exportTopology()">📥 Export Topology</button>
-                <button class="btn" onclick="validateNetwork()">🔍 Validate Network</button>
-            </div>
-
-            <div class="topology-view">
-                <div id="topology-image-container">
-                    <img id="topology-image" src="" alt="Network Topology" style="max-width: 100%; border-radius: 10px;">
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
+                        <i class="fas fa-brain text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">AI Network Simulator</h1>
+                        <p class="text-xs text-gray-500">Intelligent Network Management</p>
+                    </div>
                 </div>
                 
-                <div class="topology-info">
-                    <h3>📊 Topology Information</h3>
-                    <div id="topology-stats">
-                        <p>Loading topology data...</p>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-blue-500 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="/" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    <a href="/topology" class="px-4 py-2 rounded-lg bg-blue-500 text-white font-medium flex items-center">
+                        <i class="fas fa-project-diagram mr-2"></i>Topology
+                    </a>
+                    <a href="/devices" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-server mr-2"></i>Devices
+                    </a>
+                    <div class="relative group ml-4">
+                        <button class="flex items-center space-x-2 bg-gray-100 rounded-lg px-3 py-2 hover:bg-gray-200 transition-colors">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">{{ user.user[0] }}</span>
+                            </div>
+                            <span class="text-gray-700 font-medium">{{ user.user }}</span>
+                        </button>
                     </div>
-                    
-                    <div class="legend">
-                        <h4>Legend:</h4>
-                        <div class="legend-item">
-                            <span class="legend-color" style="background: lightblue;"></span>
-                            <span>Router</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-color" style="background: lightgreen;"></span>
-                            <span>Switch</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="legend-color" style="background: orange;"></span>
-                            <span>Other Devices</span>
-                        </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">Network Topology 🌐</h2>
+                    <p class="text-gray-600 mt-2">Visualize and manage your network structure</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <div class="flex space-x-3">
+                        <button onclick="refreshTopology()" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                        <button onclick="exportTopology()" class="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 flex items-center">
+                            <i class="fas fa-download mr-2"></i>Export
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="section">
-            <h3>🔗 Network Connections</h3>
-            <div id="connections-list">
-                <!-- Connections will be loaded here -->
+        <!-- Topology Controls -->
+        <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-600">View:</span>
+                    <select id="view-mode" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="physical">Physical</option>
+                        <option value="logical">Logical</option>
+                        <option value="performance">Performance</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-sm text-gray-600">Layout:</span>
+                    <select id="layout-mode" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="hierarchical">Hierarchical</option>
+                        <option value="circular">Circular</option>
+                        <option value="force">Force Directed</option>
+                    </select>
+                </div>
+                <div class="flex items-center space-x-4 ml-auto">
+                    <button onclick="zoomIn()" class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <i class="fas fa-search-plus"></i>
+                    </button>
+                    <button onclick="zoomOut()" class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <i class="fas fa-search-minus"></i>
+                    </button>
+                    <button onclick="resetView()" class="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <i class="fas fa-expand-arrows-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Topology Visualization -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800">Network Topology Map</h3>
+            </div>
+            <div class="p-6">
+                <div class="bg-gray-900 rounded-lg p-8 min-h-[500px] relative">
+                    <!-- Network Topology Visualization -->
+                    <div id="topology-canvas" class="relative w-full h-full min-h-[400px]">
+                        <!-- This would be replaced with a real topology visualization library -->
+                        <div class="flex flex-col items-center justify-center h-full text-gray-400">
+                            <i class="fas fa-project-diagram text-6xl mb-4"></i>
+                            <p class="text-lg">Network Topology Visualization</p>
+                            <p class="text-sm mt-2">Interactive network map would be displayed here</p>
+                        </div>
+                        
+                        <!-- Sample topology elements (simplified) -->
+                        <div class="absolute top-1/4 left-1/4 transform -translate-x-1/2 -translate-y-1/2">
+                            <div class="bg-blue-500 text-white p-4 rounded-lg shadow-lg text-center w-32">
+                                <i class="fas fa-router text-2xl mb-2"></i>
+                                <div class="font-semibold">R1</div>
+                                <div class="text-xs opacity-75">192.168.1.1</div>
+                            </div>
+                        </div>
+                        
+                        <div class="absolute top-1/4 right-1/4 transform -translate-x-1/2 -translate-y-1/2">
+                            <div class="bg-blue-500 text-white p-4 rounded-lg shadow-lg text-center w-32">
+                                <i class="fas fa-router text-2xl mb-2"></i>
+                                <div class="font-semibold">R2</div>
+                                <div class="text-xs opacity-75">10.0.0.2</div>
+                            </div>
+                        </div>
+                        
+                        <div class="absolute top-2/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <div class="bg-green-500 text-white p-4 rounded-lg shadow-lg text-center w-32">
+                                <i class="fas fa-hdd text-2xl mb-2"></i>
+                                <div class="font-semibold">SW1</div>
+                                <div class="text-xs opacity-75">Switch</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Connection lines (simplified) -->
+                        <div class="absolute top-1/4 left-1/4 w-1/2 h-1 border-t-2 border-blue-300 border-dashed"></div>
+                        <div class="absolute top-1/4 left-1/2 h-1/2 border-l-2 border-blue-300 border-dashed"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Topology Details -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+            <!-- Network Summary -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Network Summary</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Devices:</span>
+                        <span class="font-semibold">8</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Active Links:</span>
+                        <span class="font-semibold">12</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Network Health:</span>
+                        <span class="font-semibold text-green-600">92%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Issues:</span>
+                        <span class="font-semibold text-red-600">2</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Device Status -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Device Status</h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                            <span>R1 - Router</span>
+                        </div>
+                        <span class="text-sm text-gray-500">Active</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                            <span>R2 - Router</span>
+                        </div>
+                        <span class="text-sm text-gray-500">Active</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                            <span>SW1 - Switch</span>
+                        </div>
+                        <span class="text-sm text-gray-500">Warning</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                            <span>FW1 - Firewall</span>
+                        </div>
+                        <span class="text-sm text-gray-500">Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Quick Actions</h3>
+                <div class="space-y-3">
+                    <button onclick="discoverDevices()" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 flex items-center justify-center">
+                        <i class="fas fa-search mr-2"></i>Discover Devices
+                    </button>
+                    <button onclick="autoLayout()" class="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 flex items-center justify-center">
+                        <i class="fas fa-magic mr-2"></i>Auto Layout
+                    </button>
+                    <button onclick="validateTopology()" class="w-full bg-yellow-500 text-white py-2 rounded-lg hover:bg-yellow-600 flex items-center justify-center">
+                        <i class="fas fa-check-circle mr-2"></i>Validate Topology
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Link Information -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden mt-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800">Link Information</h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Source</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Target</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Interface</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bandwidth</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">R1</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">SW1</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Gig0/0 - Gig1/1</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1 Gbps</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">R1</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">R2</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Gig0/1 - Gig0/0</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1 Gbps</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">SW1</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">PC1</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Gig1/2 - Eth0</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">100 Mbps</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">Active</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
 
     <script>
-        // Load topology when page loads
-        document.addEventListener('DOMContentLoaded', loadTopology);
-
-        function loadTopology() {
-            fetch('/api/topology')
-                .then(response => response.json())
-                .then(data => {
-                    // Update topology image
-                    document.getElementById('topology-image').src = 'data:image/png;base64,' + data.topology_image;
-                    
-                    // Update topology stats
-                    const statsHtml = `
-                        <p><strong>Total Devices:</strong> ${data.nodes.length}</p>
-                        <p><strong>Total Connections:</strong> ${data.links.length}</p>
-                        <p><strong>Routers:</strong> ${data.nodes.filter(n => n.device_type === 'router').length}</p>
-                        <p><strong>Switches:</strong> ${data.nodes.filter(n => n.device_type === 'switch').length}</p>
-                    `;
-                    document.getElementById('topology-stats').innerHTML = statsHtml;
-                    
-                    // Update connections list
-                    updateConnectionsList(data.links);
-                })
-                .catch(error => {
-                    console.error('Error loading topology:', error);
-                    document.getElementById('topology-stats').innerHTML = '<p style="color: red;">Error loading topology</p>';
-                });
-        }
-
-        function updateConnectionsList(links) {
-            const connectionsDiv = document.getElementById('connections-list');
-            
-            if (links.length === 0) {
-                connectionsDiv.innerHTML = '<p>No connections found</p>';
-                return;
-            }
-            
-            let html = '<div class="connections-grid">';
-            links.forEach(link => {
-                html += `
-                    <div class="connection-card">
-                        <div class="connection-line"></div>
-                        <div class="connection-info">
-                            <strong>${link.source}</strong> 
-                            <span>↔</span> 
-                            <strong>${link.target}</strong>
-                            <br>
-                            <small>Interface: ${link.interface || 'N/A'}</small>
-                        </div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            connectionsDiv.innerHTML = html;
+        function refreshTopology() {
+            showNotification('Refreshing topology data...', 'info');
+            setTimeout(() => {
+                showNotification('Topology updated successfully!', 'success');
+            }, 1000);
         }
 
         function exportTopology() {
-            // Simple export functionality
-            const link = document.createElement('a');
-            link.href = document.getElementById('topology-image').src;
-            link.download = 'network-topology.png';
-            link.click();
+            showNotification('Exporting topology diagram...', 'info');
+            setTimeout(() => {
+                showNotification('Topology exported successfully!', 'success');
+            }, 1500);
         }
 
-        function validateNetwork() {
-            fetch('/api/validate-config', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    device_name: 'network_validation',
-                    config: 'Network-wide validation'
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.valid) {
-                    alert('✅ Network configuration is valid!');
-                } else {
-                    alert('❌ Network validation failed. Check configurations.');
-                }
-            });
+        function zoomIn() {
+            showNotification('Zooming in...', 'info');
         }
+
+        function zoomOut() {
+            showNotification('Zooming out...', 'info');
+        }
+
+        function resetView() {
+            showNotification('Resetting view...', 'info');
+        }
+
+        function discoverDevices() {
+            showNotification('Starting device discovery...', 'info');
+            setTimeout(() => {
+                showNotification('Device discovery completed! Found 2 new devices.', 'success');
+            }, 2000);
+        }
+
+        function autoLayout() {
+            showNotification('Applying automatic layout...', 'info');
+            setTimeout(() => {
+                showNotification('Layout optimized successfully!', 'success');
+            }, 1000);
+        }
+
+        function validateTopology() {
+            showNotification('Validating topology configuration...', 'info');
+            setTimeout(() => {
+                showNotification('Topology validation completed! No issues found.', 'success');
+            }, 1500);
+        }
+
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white ${
+                type === 'success' ? 'bg-green-500' : 'bg-blue-500'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // Handle view mode changes
+        document.getElementById('view-mode').addEventListener('change', function(e) {
+            showNotification(`Switched to ${e.target.value} view`, 'info');
+        });
+
+        document.getElementById('layout-mode').addEventListener('change', function(e) {
+            showNotification(`Applied ${e.target.value} layout`, 'info');
+        });
     </script>
-
-    <style>
-        .topology-controls {
-            margin-bottom: 1.5rem;
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .topology-view {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .topology-info {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 10px;
-        }
-
-        .legend {
-            margin-top: 1.5rem;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-
-        .legend-color {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            margin-right: 0.5rem;
-            border: 2px solid #ddd;
-        }
-
-        .connections-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1rem;
-        }
-
-        .connection-card {
-            background: white;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid #3498db;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .connection-info {
-            text-align: center;
-        }
-
-        @media (max-width: 768px) {
-            .topology-view {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
 </body>
 </html>

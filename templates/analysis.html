@@ -4,75 +4,204 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Network Analysis - AI Network Simulator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-    <nav class="navbar">
-    <div class="nav-brand">
-        <h1>🤖 AI Network Simulator</h1>
-    </div>
-    <div class="nav-links">
-        <a href="/" class="active">Dashboard</a>
-        <a href="/topology">Topology</a>
-        <a href="/config">Configuration</a>
-        <a href="/simulation">Simulation</a>
-        <a href="/devices">Devices</a>
-        <a href="/analysis">Analysis</a>
-        <a href="/ml">AI/ML</a>
-        <a href="/logs">Logs</a>
-        <a href="/reports">Reports</a>
-        <a href="/settings">Settings</a>
-        
-        <!-- User Info Section -->
-        <div class="user-info">
-            <span>Welcome, {{ user.name }}</span>
-            <div class="user-dropdown">
-                <button class="btn-user">👤 {{ user.user }}</button>
-                <div class="user-menu">
-                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
-                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
+                        <i class="fas fa-brain text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">AI Network Simulator</h1>
+                        <p class="text-xs text-gray-500">Intelligent Network Management</p>
+                    </div>
+                </div>
+                
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-blue-500 focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="/" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    <a href="/topology" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-project-diagram mr-2"></i>Topology
+                    </a>
+                    <a href="/analysis" class="px-4 py-2 rounded-lg bg-blue-500 text-white font-medium flex items-center">
+                        <i class="fas fa-chart-bar mr-2"></i>Analysis
+                    </a>
+                    <div class="relative group ml-4">
+                        <button class="flex items-center space-x-2 bg-gray-100 rounded-lg px-3 py-2 hover:bg-gray-200 transition-colors">
+                            <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">{{ user.user[0] }}</span>
+                            </div>
+                            <span class="text-gray-700 font-medium">{{ user.user }}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
-    <div class="container">
-        <div class="section">
-            <h2>📊 Network Analysis</h2>
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">Network Analysis 📊</h2>
+                    <p class="text-gray-600 mt-2">Comprehensive performance metrics and insights</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <div class="flex space-x-3">
+                        <button onclick="exportReport()" class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center">
+                            <i class="fas fa-download mr-2"></i>Export Report
+                        </button>
+                        <button onclick="refreshAnalysis()" class="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 flex items-center">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Avg Response Time</p>
+                        <h3 class="text-2xl font-bold text-gray-800" id="avg-response-time">24ms</h3>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <i class="fas fa-clock text-blue-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
             
-            <div class="analysis-controls">
-                <button class="btn btn-success" onclick="runAnalysis()">🔍 Run Analysis</button>
-                <button class="btn" onclick="generateReport()">📈 Generate Report</button>
-                <button class="btn" onclick="exportAnalysis()">📥 Export Data</button>
+            <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Packet Loss</p>
+                        <h3 class="text-2xl font-bold text-gray-800" id="packet-loss">0.2%</h3>
+                    </div>
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <i class="fas fa-chart-line text-green-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-yellow-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Bandwidth Usage</p>
+                        <h3 class="text-2xl font-bold text-gray-800" id="bandwidth-usage">68%</h3>
+                    </div>
+                    <div class="p-3 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-network-wired text-yellow-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Error Rate</p>
+                        <h3 class="text-2xl font-bold text-gray-800" id="error-rate">1.5%</h3>
+                    </div>
+                    <div class="p-3 bg-red-100 rounded-lg">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- CPU Usage Chart -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">CPU Usage Over Time</h3>
+                <div class="h-64">
+                    <canvas id="cpuChart"></canvas>
+                </div>
             </div>
 
-            <div class="analysis-results">
-                <div class="analysis-section">
-                    <h3>🌐 Network Overview</h3>
-                    <div id="network-overview" class="metrics-grid">
-                        <!-- Network overview metrics -->
-                    </div>
+            <!-- Memory Usage Chart -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Memory Usage Over Time</h3>
+                <div class="h-64">
+                    <canvas id="memoryChart"></canvas>
                 </div>
+            </div>
 
-                <div class="analysis-section">
-                    <h3>📈 Performance Metrics</h3>
-                    <div id="performance-metrics" class="charts-grid">
-                        <!-- Performance charts -->
-                    </div>
+            <!-- Network Traffic Chart -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Network Traffic</h3>
+                <div class="h-64">
+                    <canvas id="trafficChart"></canvas>
                 </div>
+            </div>
 
-                <div class="analysis-section">
-                    <h3>⚠️ Health Check</h3>
-                    <div id="health-check" class="health-grid">
-                        <!-- Health check results -->
-                    </div>
+            <!-- Device Performance -->
+            <div class="bg-white rounded-xl shadow-sm p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Device Performance</h3>
+                <div class="h-64">
+                    <canvas id="deviceChart"></canvas>
                 </div>
+            </div>
+        </div>
 
-                <div class="analysis-section">
-                    <h3>🔍 Recommendations</h3>
-                    <div id="recommendations" class="recommendations-list">
-                        <!-- Recommendations will appear here -->
+        <!-- Detailed Analysis -->
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-800">Performance Analysis</h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Top Performance Issues</h4>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-circle text-red-500 mr-3"></i>
+                                    <span>High CPU on R2</span>
+                                </div>
+                                <span class="text-red-600 font-medium">Critical</span>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <i class="fas fa-exclamation-triangle text-yellow-500 mr-3"></i>
+                                    <span>Memory leak on SW1</span>
+                                </div>
+                                <span class="text-yellow-600 font-medium">Warning</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800 mb-3">Recommendations</h4>
+                        <div class="space-y-2">
+                            <div class="flex items-start">
+                                <i class="fas fa-lightbulb text-blue-500 mt-1 mr-3"></i>
+                                <span>Optimize R2 configuration to reduce CPU load</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-lightbulb text-blue-500 mt-1 mr-3"></i>
+                                <span>Consider upgrading SW1 memory</span>
+                            </div>
+                            <div class="flex items-start">
+                                <i class="fas fa-lightbulb text-blue-500 mt-1 mr-3"></i>
+                                <span>Monitor network traffic during peak hours</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -80,455 +209,119 @@
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load initial analysis
-            runAnalysis();
-        });
-
-        function runAnalysis() {
-            // Show loading state
-            document.getElementById('network-overview').innerHTML = '<p>Running analysis...</p>';
-            document.getElementById('performance-metrics').innerHTML = '<p>Loading performance data...</p>';
-            document.getElementById('health-check').innerHTML = '<p>Performing health check...</p>';
-            document.getElementById('recommendations').innerHTML = '<p>Generating recommendations...</p>';
-
-            // Fetch analysis data
-            fetch('/api/network-analysis')
-                .then(response => response.json())
-                .then(data => {
-                    updateNetworkOverview(data);
-                    updatePerformanceMetrics();
-                    updateHealthCheck();
-                    updateRecommendations(data);
-                })
-                .catch(error => {
-                    console.error('Error running analysis:', error);
-                    // Show demo data if API fails
-                    showDemoAnalysis();
-                });
-        }
-
-        function updateNetworkOverview(data) {
-            const overviewDiv = document.getElementById('network-overview');
-            
-            const overviewData = {
-                'Total Devices': data.total_devices || 3,
-                'Network Links': data.total_links || 2,
-                'Network Density': (data.network_density || 0.33).toFixed(2),
-                'Connectivity': data.is_connected ? 'Connected' : 'Fragmented',
-                'Avg Degree': (data.average_degree || 1.33).toFixed(2),
-                'Network Health': '95%'
-            };
-
-            let html = '';
-            for (const [key, value] of Object.entries(overviewData)) {
-                html += `
-                    <div class="metric-card">
-                        <div class="metric-value">${value}</div>
-                        <div class="metric-label">${key}</div>
-                    </div>
-                `;
-            }
-            overviewDiv.innerHTML = html;
-        }
-
-        function updatePerformanceMetrics() {
-            const metricsDiv = document.getElementById('performance-metrics');
-            
-            // Demo performance data
-            const performanceData = [
-                { metric: 'CPU Utilization', value: 65, threshold: 80 },
-                { metric: 'Memory Usage', value: 45, threshold: 75 },
-                { metric: 'Bandwidth Usage', value: 30, threshold: 85 },
-                { metric: 'Packet Loss', value: 0.2, threshold: 1 },
-                { metric: 'Latency', value: 25, threshold: 50 },
-                { metric: 'Uptime', value: 99.8, threshold: 99.5 }
-            ];
-
-            let html = '';
-            performanceData.forEach(item => {
-                const percentage = item.metric === 'Latency' ? item.value + 'ms' : 
-                                 item.metric === 'Packet Loss' ? item.value + '%' :
-                                 item.metric === 'Uptime' ? item.value + '%' : item.value + '%';
-                
-                const isCritical = item.value > item.threshold;
-                const isWarning = item.value > item.threshold * 0.8;
-                
-                html += `
-                    <div class="chart-card">
-                        <h4>${item.metric}</h4>
-                        <div class="gauge-container">
-                            <div class="gauge">
-                                <div class="gauge-fill ${isCritical ? 'critical' : isWarning ? 'warning' : 'normal'}" 
-                                     style="transform: rotate(${item.value * 1.8}deg)"></div>
-                                <div class="gauge-center">
-                                    <span class="gauge-value">${percentage}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="threshold">Threshold: ${item.threshold}${item.metric === 'Latency' ? 'ms' : item.metric === 'Uptime' ? '%' : '%'}</div>
-                    </div>
-                `;
+        // Initialize Charts
+        function initializeCharts() {
+            // CPU Usage Chart
+            const cpuCtx = document.getElementById('cpuChart').getContext('2d');
+            new Chart(cpuCtx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [{
+                        label: 'CPU Usage (%)',
+                        data: [25, 30, 45, 65, 55, 35],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
             });
-            
-            metricsDiv.innerHTML = html;
-        }
 
-        function updateHealthCheck() {
-            const healthDiv = document.getElementById('health-check');
-            
-            const healthChecks = [
-                { check: 'Device Connectivity', status: 'pass', message: 'All devices are reachable' },
-                { check: 'Configuration Consistency', status: 'pass', message: 'No configuration conflicts' },
-                { check: 'Security Policies', status: 'warning', message: 'Review firewall rules' },
-                { check: 'Backup Status', status: 'fail', message: 'Last backup: 7 days ago' },
-                { check: 'Firmware Updates', status: 'pass', message: 'All devices up to date' },
-                { check: 'License Compliance', status: 'pass', message: 'All licenses valid' }
-            ];
-
-            let html = '';
-            healthChecks.forEach(check => {
-                const statusIcon = check.status === 'pass' ? '✅' : 
-                                 check.status === 'warning' ? '⚠️' : '❌';
-                const statusClass = check.status === 'pass' ? 'pass' : 
-                                  check.status === 'warning' ? 'warning' : 'fail';
-                
-                html += `
-                    <div class="health-item ${statusClass}">
-                        <div class="health-icon">${statusIcon}</div>
-                        <div class="health-info">
-                            <div class="health-check">${check.check}</div>
-                            <div class="health-message">${check.message}</div>
-                        </div>
-                    </div>
-                `;
+            // Memory Usage Chart
+            const memoryCtx = document.getElementById('memoryChart').getContext('2d');
+            new Chart(memoryCtx, {
+                type: 'line',
+                data: {
+                    labels: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'],
+                    datasets: [{
+                        label: 'Memory Usage (%)',
+                        data: [40, 45, 50, 75, 65, 45],
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
             });
-            
-            healthDiv.innerHTML = html;
-        }
 
-        function updateRecommendations(data) {
-            const recommendationsDiv = document.getElementById('recommendations');
-            
-            const recommendations = [
-                { priority: 'high', text: 'Implement regular backup schedule', category: 'Backup' },
-                { priority: 'medium', text: 'Consider adding redundant links for critical paths', category: 'Redundancy' },
-                { priority: 'low', text: 'Optimize OSPF timer configurations', category: 'Performance' },
-                { priority: 'medium', text: 'Review and update security policies', category: 'Security' }
-            ];
-
-            let html = '';
-            recommendations.forEach(rec => {
-                const priorityClass = rec.priority === 'high' ? 'high-priority' : 
-                                   rec.priority === 'medium' ? 'medium-priority' : 'low-priority';
-                const priorityText = rec.priority === 'high' ? 'High Priority' : 
-                                   rec.priority === 'medium' ? 'Medium Priority' : 'Low Priority';
-                
-                html += `
-                    <div class="recommendation-item ${priorityClass}">
-                        <div class="rec-priority">${priorityText}</div>
-                        <div class="rec-text">${rec.text}</div>
-                        <div class="rec-category">${rec.category}</div>
-                    </div>
-                `;
+            // Traffic Chart
+            const trafficCtx = document.getElementById('trafficChart').getContext('2d');
+            new Chart(trafficCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['R1', 'R2', 'SW1', 'SW2'],
+                    datasets: [{
+                        label: 'Traffic (Mbps)',
+                        data: [450, 320, 280, 190],
+                        backgroundColor: '#8B5CF6'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
             });
-            
-            recommendationsDiv.innerHTML = html;
+
+            // Device Performance Chart
+            const deviceCtx = document.getElementById('deviceChart').getContext('2d');
+            new Chart(deviceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Optimal', 'Good', 'Warning', 'Critical'],
+                    datasets: [{
+                        data: [60, 25, 10, 5],
+                        backgroundColor: ['#10B981', '#3B82F6', '#F59E0B', '#EF4444']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
         }
 
-        function showDemoAnalysis() {
-            // Demo data for when API is not available
-            const demoData = {
-                total_devices: 3,
-                total_links: 2,
-                network_density: 0.33,
-                is_connected: true,
-                average_degree: 1.33
-            };
-            
-            updateNetworkOverview(demoData);
-            updatePerformanceMetrics();
-            updateHealthCheck();
-            updateRecommendations(demoData);
+        function exportReport() {
+            alert('Analysis report exported successfully!');
         }
 
-        function generateReport() {
-            // Generate analysis report
-            const reportData = {
-                timestamp: new Date().toLocaleString(),
-                overview: document.getElementById('network-overview').innerText,
-                recommendations: document.getElementById('recommendations').innerText
-            };
+        function refreshAnalysis() {
+            // Simulate data refresh
+            document.getElementById('avg-response-time').textContent = '22ms';
+            document.getElementById('packet-loss').textContent = '0.1%';
+            document.getElementById('bandwidth-usage').textContent = '65%';
+            document.getElementById('error-rate').textContent = '1.2%';
             
-            const reportContent = `
-Network Analysis Report
-Generated: ${reportData.timestamp}
-
-NETWORK OVERVIEW:
-${reportData.overview}
-
-RECOMMENDATIONS:
-${reportData.recommendations}
-
---- End of Report ---
-            `;
+            // Reinitialize charts with new data
+            initializeCharts();
             
-            const blob = new Blob([reportContent], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'network-analysis-report.txt';
-            a.click();
-            window.URL.revokeObjectURL(url);
-            
-            alert('✅ Analysis report generated and downloaded!');
+            // Show success message
+            showNotification('Analysis data refreshed successfully!', 'success');
         }
 
-        function exportAnalysis() {
-            // Export analysis data
-            const analysisData = {
-                network_overview: document.getElementById('network-overview').innerText,
-                performance_metrics: document.getElementById('performance-metrics').innerText,
-                health_check: document.getElementById('health-check').innerText,
-                recommendations: document.getElementById('recommendations').innerText
-            };
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg text-white ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
             
-            const jsonData = JSON.stringify(analysisData, null, 2);
-            const blob = new Blob([jsonData], { type: 'application/json' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'network-analysis-data.json';
-            a.click();
-            window.URL.revokeObjectURL(url);
-            
-            alert('✅ Analysis data exported to JSON!');
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeCharts);
     </script>
-
-    <style>
-        .analysis-controls {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-
-        .analysis-section {
-            margin-bottom: 2rem;
-            padding: 1.5rem;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .analysis-section h3 {
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid #ecf0f1;
-            padding-bottom: 0.5rem;
-        }
-
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-        }
-
-        .metric-card {
-            background: #f8f9fa;
-            padding: 1.5rem;
-            border-radius: 8px;
-            text-align: center;
-            border-left: 4px solid #3498db;
-        }
-
-        .metric-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-        }
-
-        .metric-label {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .chart-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .chart-card h4 {
-            margin-bottom: 1rem;
-            color: #2c3e50;
-        }
-
-        .gauge-container {
-            position: relative;
-            width: 120px;
-            height: 120px;
-            margin: 0 auto 1rem;
-        }
-
-        .gauge {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: #ecf0f1;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .gauge-fill {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background: conic-gradient(#2ecc71 0deg, #f39c12 120deg, #e74c3c 240deg);
-            clip-path: polygon(50% 50%, 50% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 50% 0%);
-            transform-origin: center;
-            transition: transform 0.5s ease;
-        }
-
-        .gauge-fill.normal { background: conic-gradient(#2ecc71 0deg, #2ecc71 180deg, #ecf0f1 180deg); }
-        .gauge-fill.warning { background: conic-gradient(#2ecc71 0deg, #f39c12 120deg, #ecf0f1 120deg); }
-        .gauge-fill.critical { background: conic-gradient(#2ecc71 0deg, #f39c12 90deg, #e74c3c 180deg, #ecf0f1 180deg); }
-
-        .gauge-center {
-            position: absolute;
-            top: 10%;
-            left: 10%;
-            width: 80%;
-            height: 80%;
-            background: white;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .gauge-value {
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .threshold {
-            font-size: 0.8rem;
-            color: #7f8c8d;
-        }
-
-        .health-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-        }
-
-        .health-item {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid;
-        }
-
-        .health-item.pass {
-            background: #d5f5e3;
-            border-color: #27ae60;
-        }
-
-        .health-item.warning {
-            background: #fef9e7;
-            border-color: #f39c12;
-        }
-
-        .health-item.fail {
-            background: #fadbd8;
-            border-color: #e74c3c;
-        }
-
-        .health-icon {
-            font-size: 1.5rem;
-        }
-
-        .health-check {
-            font-weight: 600;
-            color: #2c3e50;
-        }
-
-        .health-message {
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
-
-        .recommendations-list {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .recommendation-item {
-            padding: 1rem;
-            border-radius: 8px;
-            border-left: 4px solid;
-        }
-
-        .recommendation-item.high-priority {
-            background: #fadbd8;
-            border-color: #e74c3c;
-        }
-
-        .recommendation-item.medium-priority {
-            background: #fef9e7;
-            border-color: #f39c12;
-        }
-
-        .recommendation-item.low-priority {
-            background: #ebf5fb;
-            border-color: #3498db;
-        }
-
-        .rec-priority {
-            font-weight: bold;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            font-size: 0.8rem;
-        }
-
-        .rec-text {
-            color: #2c3e50;
-            margin-bottom: 0.5rem;
-        }
-
-        .rec-category {
-            color: #7f8c8d;
-            font-size: 0.8rem;
-            font-style: italic;
-        }
-
-        @media (max-width: 768px) {
-            .metrics-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .health-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
 </body>
 </html>

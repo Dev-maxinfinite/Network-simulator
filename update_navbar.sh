@@ -1,65 +1,44 @@
 #!/bin/bash
 
-echo "🔄 Updating navigation bars in all templates..."
+echo "🧹 Removing old environment..."
+deactivate 2>/dev/null
+rm -rf myenv
+rm -rf ~/.cache/pip/
 
-# List of all template files
-TEMPLATES=("index.html" "topology.html" "config.html" "simulation.html" "devices.html" "analysis.html" "ml.html" "logs.html" "reports.html" "settings.html")
+echo "🐍 Creating fresh environment..."
+python3 -m venv myenv
+source myenv/bin/activate
 
-# New navbar code
-NEW_NAVBAR='<nav class="navbar">
-    <div class="nav-brand">
-        <h1>🤖 AI Network Simulator</h1>
-    </div>
-    <div class="nav-links">
-        <a href="/">Dashboard</a>
-        <a href="/topology">Topology</a>
-        <a href="/config">Configuration</a>
-        <a href="/simulation">Simulation</a>
-        <a href="/devices">Devices</a>
-        <a href="/analysis">Analysis</a>
-        <a href="/ml">AI/ML</a>
-        <a href="/logs">Logs</a>
-        <a href="/reports">Reports</a>
-        <a href="/settings">Settings</a>
-        
-        <!-- User Info Section -->
-        <div class="user-info">
-            <span>Welcome, {{ user.name }}</span>
-            <div class="user-dropdown">
-                <button class="btn-user">�� {{ user.user }}</button>
-                <div class="user-menu">
-                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
-                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</nav>'
+echo "📦 Installing packages in correct order..."
+echo "1. Installing numpy..."
+pip install numpy==1.24.3
+python -c "import numpy; print('   ✅ Numpy:', numpy.__version__)"
 
-# Update each template
-for template in "${TEMPLATES[@]}"; do
-    if [ -f "templates/$template" ]; then
-        echo "📝 Updating $template..."
-        
-        # Create temporary file
-        temp_file=$(mktemp)
-        
-        # Copy everything before nav
-        sed -n '1,/^<nav class="navbar">/p' "templates/$template" | head -n -1 > "$temp_file"
-        
-        # Add new navbar
-        echo "$NEW_NAVBAR" >> "$temp_file"
-        
-        # Copy everything after nav
-        sed -n '/^<nav class="navbar">/,/^<\/nav>/!p' "templates/$template" | tail -n +2 >> "$temp_file"
-        
-        # Replace original file
-        mv "$temp_file" "templates/$template"
-        
-        echo "✅ $template updated"
-    else
-        echo "❌ $template not found, skipping..."
-    fi
-done
+echo "2. Installing pandas..."
+pip install pandas==2.0.3
+python -c "import pandas; print('   ✅ Pandas:', pandas.__version__)"
 
-echo "🎉 All templates updated successfully!"
+echo "3. Installing other packages..."
+pip install matplotlib==3.7.2
+pip install flask==2.3.3
+pip install networkx==3.1
+
+echo "✅ Final verification..."
+python -c "
+import numpy as np
+import pandas as pd
+import matplotlib
+import flask
+import networkx as nx
+print('')
+print('🎉 ALL PACKAGES WORKING!')
+print('📊 Versions:')
+print('   Numpy:', np.__version__)
+print('   Pandas:', pd.__version__)
+print('   Matplotlib:', matplotlib.__version__)
+print('   Flask:', flask.__version__)
+print('   NetworkX:', nx.__version__)
+"
+
+echo ""
+echo "🚀 Now run: python app.py"

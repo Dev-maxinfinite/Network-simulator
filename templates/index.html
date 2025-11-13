@@ -4,151 +4,499 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Network Simulator - Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E40AF',
+                        accent: '#10B981'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .animate-pulse-slow {
+            animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        .network-node {
+            transition: all 0.3s ease;
+        }
+        .network-node:hover {
+            transform: scale(1.1);
+        }
+    </style>
 </head>
-<body>
+<body class="bg-gray-50 min-h-screen">
     <!-- Navigation -->
-   <nav class="navbar">
-    <div class="nav-brand">
-        <h1>🤖 AI Network Simulator</h1>
-    </div>
-    <div class="nav-links">
-        <a href="/" class="active">Dashboard</a>
-        <a href="/topology">Topology</a>
-        <a href="/config">Configuration</a>
-        <a href="/simulation">Simulation</a>
-        <a href="/devices">Devices</a>
-        <a href="/analysis">Analysis</a>
-        <a href="/ml">AI/ML</a>
-        <a href="/logs">Logs</a>
-        <a href="/reports">Reports</a>
-        <a href="/settings">Settings</a>
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <!-- Brand -->
+                <div class="flex items-center space-x-3">
+                    <div class="gradient-bg p-2 rounded-lg">
+                        <i class="fas fa-brain text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">AI Network Simulator</h1>
+                        <p class="text-xs text-gray-500">Intelligent Network Management</p>
+                    </div>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-600 hover:text-primary focus:outline-none">
+                        <i class="fas fa-bars text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="/" class="px-4 py-2 rounded-lg bg-primary text-white font-medium flex items-center">
+                        <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+                    </a>
+                    <a href="/topology" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-project-diagram mr-2"></i>Topology
+                    </a>
+                    <a href="/simulation" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-play-circle mr-2"></i>Simulation
+                    </a>
+                    <a href="/analysis" class="px-4 py-2 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-chart-bar mr-2"></i>Analysis
+                    </a>
+                    
+                    <!-- User Dropdown -->
+                    <div class="relative group ml-4">
+                        <button class="flex items-center space-x-2 bg-gray-100 rounded-lg px-3 py-2 hover:bg-gray-200 transition-colors">
+                            <div class="w-8 h-8 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">{{ user.user[0] }}</span>
+                            </div>
+                            <span class="text-gray-700 font-medium">{{ user.user }}</span>
+                            <i class="fas fa-chevron-down text-gray-500 text-xs"></i>
+                        </button>
+                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                            <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-user mr-2"></i>Profile
+                            </a>
+                            <a href="/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-cog mr-2"></i>Settings
+                            </a>
+                            <div class="border-t my-1"></div>
+                            <a href="/logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Mobile menu -->
+            <div id="mobile-menu" class="md:hidden hidden pb-4 border-t border-gray-200">
+                <div class="flex flex-col space-y-2 pt-4">
+                    <a href="/" class="px-4 py-3 rounded-lg bg-primary text-white font-medium flex items-center">
+                        <i class="fas fa-tachometer-alt mr-3"></i>Dashboard
+                    </a>
+                    <a href="/topology" class="px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-project-diagram mr-3"></i>Topology
+                    </a>
+                    <a href="/simulation" class="px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-play-circle mr-3"></i>Simulation
+                    </a>
+                    <a href="/analysis" class="px-4 py-3 rounded-lg text-gray-600 hover:bg-gray-100 font-medium flex items-center">
+                        <i class="fas fa-chart-bar mr-3"></i>Analysis
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 py-6">
+        <!-- Welcome Header -->
+        <div class="mb-8">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-800">Welcome back, {{ user.name }}! 👋</h2>
+                    <p class="text-gray-600 mt-2">Here's what's happening with your network today</p>
+                </div>
+                <div class="mt-4 md:mt-0">
+                    <div class="flex space-x-3">
+                        <button class="bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-700 hover:bg-gray-50 flex items-center">
+                            <i class="fas fa-sync-alt mr-2"></i>Refresh
+                        </button>
+                        <button class="bg-primary text-white rounded-lg px-4 py-2 hover:bg-secondary flex items-center">
+                            <i class="fas fa-plus mr-2"></i>New Device
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
         
-        <!-- User Info Section -->
-        <div class="user-info">
-            <span>Welcome, {{ user.name }}</span>
-            <div class="user-dropdown">
-                <button class="btn-user">👤 {{ user.user }}</button>
-                <div class="user-menu">
-                    <a href="/settings" class="user-menu-item">⚙️ Settings</a>
-                    <a href="/logout" class="user-menu-item">🚪 Logout</a>
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-sm p-6 card-hover border-l-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Total Devices</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="total-devices">{{ stats.total_devices }}</h3>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <i class="fas fa-server text-blue-500 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center text-sm text-green-500">
+                        <i class="fas fa-arrow-up mr-1"></i>
+                        <span>{{ stats.active_devices }} active</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 card-hover border-l-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Links</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="active-links">{{ stats.total_links }}</h3>
+                    </div>
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <i class="fas fa-link text-green-500 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center text-sm text-gray-500">
+                        <i class="fas fa-circle mr-1 text-green-500"></i>
+                        <span>All systems operational</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 card-hover border-l-4 border-yellow-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Network Health</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="network-health">{{ stats.network_health }}%</h3>
+                    </div>
+                    <div class="p-3 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-heartbeat text-yellow-500 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-yellow-500 h-2 rounded-full" style="width: {{ stats.network_health }}%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm p-6 card-hover border-l-4 border-red-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Anomalies</p>
+                        <h3 class="text-2xl font-bold text-gray-800 mt-1" id="anomalies-count">2</h3>
+                    </div>
+                    <div class="p-3 bg-red-100 rounded-lg">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center text-sm text-red-500">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span>Requires attention</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Quick Actions -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold text-gray-800">Quick Actions</h2>
+                        <button class="text-primary hover:text-secondary text-sm font-medium">View All</button>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 cursor-pointer card-hover border border-blue-100" onclick="location.href='/topology'">
+                            <div class="flex items-center mb-3">
+                                <div class="p-3 rounded-lg bg-white shadow-sm mr-4">
+                                    <i class="fas fa-project-diagram text-blue-500 text-xl"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-lg">View Topology</h3>
+                            </div>
+                            <p class="text-gray-600 text-sm">Visualize and analyze network topology</p>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-5 cursor-pointer card-hover border border-green-100" onclick="location.href='/config'">
+                            <div class="flex items-center mb-3">
+                                <div class="p-3 rounded-lg bg-white shadow-sm mr-4">
+                                    <i class="fas fa-cog text-green-500 text-xl"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-lg">Configure</h3>
+                            </div>
+                            <p class="text-gray-600 text-sm">Edit device configurations and settings</p>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-purple-50 to-violet-50 rounded-xl p-5 cursor-pointer card-hover border border-purple-100" onclick="location.href='/simulation'">
+                            <div class="flex items-center mb-3">
+                                <div class="p-3 rounded-lg bg-white shadow-sm mr-4">
+                                    <i class="fas fa-play-circle text-purple-500 text-xl"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-lg">Start Simulation</h3>
+                            </div>
+                            <p class="text-gray-600 text-sm">Run advanced network simulations</p>
+                        </div>
+                        
+                        <div class="bg-gradient-to-r from-yellow-50 to-amber-50 rounded-xl p-5 cursor-pointer card-hover border border-yellow-100" onclick="location.href='/analysis'">
+                            <div class="flex items-center mb-3">
+                                <div class="p-3 rounded-lg bg-white shadow-sm mr-4">
+                                    <i class="fas fa-chart-bar text-yellow-500 text-xl"></i>
+                                </div>
+                                <h3 class="font-bold text-gray-800 text-lg">Analyze</h3>
+                            </div>
+                            <p class="text-gray-600 text-sm">Performance metrics and analytics</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Devices -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-satellite-dish mr-3 text-primary"></i>
+                            Network Devices
+                        </h2>
+                    </div>
+                    <div class="p-4 overflow-x-auto">
+                        <div id="devices-table">
+                            <!-- Devices will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+                <!-- Topology Preview -->
+                <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h2 class="text-xl font-bold text-gray-800 flex items-center">
+                            <i class="fas fa-network-wired mr-3 text-green-500"></i>
+                            Topology Overview
+                        </h2>
+                    </div>
+                    <div class="p-4">
+                        <div class="bg-gray-50 rounded-lg p-4 flex justify-center items-center min-h-[200px]">
+                            <div id="topology-preview" class="w-full text-center">
+                                <div class="flex justify-center items-center space-x-8 mb-4">
+                                    <div class="network-node bg-blue-100 p-4 rounded-lg">
+                                        <i class="fas fa-router text-blue-500 text-2xl"></i>
+                                        <p class="text-sm font-medium mt-1">R1</p>
+                                    </div>
+                                    <div class="network-node bg-green-100 p-4 rounded-lg">
+                                        <i class="fas fa-hdd text-green-500 text-2xl"></i>
+                                        <p class="text-sm font-medium mt-1">SW1</p>
+                                    </div>
+                                    <div class="network-node bg-blue-100 p-4 rounded-lg">
+                                        <i class="fas fa-router text-blue-500 text-2xl"></i>
+                                        <p class="text-sm font-medium mt-1">R2</p>
+                                    </div>
+                                </div>
+                                <div class="text-gray-500 text-sm">
+                                    <p>3 devices connected via 2 active links</p>
+                                    <p class="mt-1">Network Status: <span class="text-green-500 font-medium">Healthy</span></p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between items-center">
+                            <button class="text-primary hover:text-secondary text-sm font-medium flex items-center">
+                                <i class="fas fa-expand mr-2"></i>Full Screen
+                            </button>
+                            <button class="bg-primary text-white rounded-lg px-4 py-2 text-sm hover:bg-secondary flex items-center">
+                                <i class="fas fa-download mr-2"></i>Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Status -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">System Status</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="status-dot bg-green-500 animate-pulse-slow"></span>
+                                <span class="text-gray-700">AI Engine</span>
+                            </div>
+                            <span class="text-green-500 font-medium">Running</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="status-dot bg-green-500"></span>
+                                <span class="text-gray-700">Database</span>
+                            </div>
+                            <span class="text-green-500 font-medium">Online</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="status-dot bg-yellow-500"></span>
+                                <span class="text-gray-700">ML Models</span>
+                            </div>
+                            <span class="text-yellow-500 font-medium">Training</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <span class="status-dot bg-green-500"></span>
+                                <span class="text-gray-700">API Services</span>
+                            </div>
+                            <span class="text-green-500 font-medium">Active</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">Recent Activity</h2>
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <div class="bg-blue-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-plus text-blue-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">New device added</p>
+                                <p class="text-xs text-gray-500">Router-5 was configured 2 hours ago</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-yellow-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-exclamation-triangle text-yellow-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">Anomaly detected</p>
+                                <p class="text-xs text-gray-500">High CPU usage on Server-3</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <div class="bg-green-100 p-2 rounded-lg mr-3">
+                                <i class="fas fa-check text-green-500 text-sm"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-800">Simulation completed</p>
+                                <p class="text-xs text-gray-500">Network stress test finished</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</nav>
 
-    <!-- Main Content -->
-    <div class="container">
-        <!-- Stats Cards -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <h3>Total Devices</h3>
-                <div class="stat-value" id="total-devices">0</div>
-            </div>
-            <div class="stat-card">
-                <h3>Active Links</h3>
-                <div class="stat-value" id="active-links">0</div>
-            </div>
-            <div class="stat-card">
-                <h3>Network Health</h3>
-                <div class="stat-value" id="network-health">100%</div>
-            </div>
-            <div class="stat-card">
-                <h3>Anomalies</h3>
-                <div class="stat-value" id="anomalies-count">0</div>
-            </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="actions-grid">
-            <div class="action-card" onclick="location.href='/topology'">
-                <h3>🌐 View Topology</h3>
-                <p>Visualize network topology</p>
-            </div>
-            <div class="action-card" onclick="location.href='/config'">
-                <h3>⚙️ Configure</h3>
-                <p>Edit device configurations</p>
-            </div>
-            <div class="action-card" onclick="location.href='/simulation'">
-                <h3>🎮 Start Simulation</h3>
-                <p>Run network simulation</p>
-            </div>
-            <div class="action-card" onclick="location.href='/analysis'">
-                <h3>📊 Analyze</h3>
-                <p>Network performance analysis</p>
-            </div>
-        </div>
-
-        <!-- Recent Devices -->
-        <div class="section">
-            <h2>📡 Network Devices</h2>
-            <div class="devices-table" id="devices-table">
-                <!-- Devices will be loaded here -->
-            </div>
-        </div>
-
-        <!-- Topology Preview -->
-        <div class="section">
-            <h2>🔗 Topology Overview</h2>
-            <div class="topology-preview">
-                <img id="topology-image" src="" alt="Network Topology" style="max-width: 100%;">
-            </div>
-        </div>
-    </div>
-
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
     <script>
-        // Load dashboard data
-        loadDashboardData();
-        
-        function loadDashboardData() {
-            fetch('/api/topology')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('total-devices').textContent = data.nodes.length;
-                    document.getElementById('active-links').textContent = data.links.length;
-                    document.getElementById('topology-image').src = 'data:image/png;base64,' + data.topology_image;
-                });
-            
-            fetch('/api/devices')
-                .then(response => response.json())
-                .then(devices => {
-                    updateDevicesTable(devices);
-                });
-        }
-        
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        });
+
+        // Load devices data
+        fetch('/api/devices')
+            .then(response => response.json())
+            .then(devices => {
+                updateDevicesTable(devices);
+            })
+            .catch(error => {
+                console.error('Error loading devices:', error);
+                // Fallback data
+                const fallbackDevices = [
+                    { name: 'R1', device_type: 'router', ip_address: '192.168.1.1', status: 'active', cpu_usage: 45, memory_usage: 60 },
+                    { name: 'SW1', device_type: 'switch', ip_address: 'N/A', status: 'active', cpu_usage: 25, memory_usage: 40 },
+                    { name: 'R2', device_type: 'router', ip_address: '10.0.0.2', status: 'warning', cpu_usage: 85, memory_usage: 75 }
+                ];
+                updateDevicesTable(fallbackDevices);
+            });
+
         function updateDevicesTable(devices) {
             const table = document.getElementById('devices-table');
             if (devices.length === 0) {
-                table.innerHTML = '<p>No devices configured</p>';
+                table.innerHTML = '<p class="text-gray-500 text-center py-8">No devices configured</p>';
                 return;
             }
             
             let html = `
-                <table>
+                <table class="min-w-full divide-y divide-gray-200">
                     <thead>
-                        <tr>
-                            <th>Device</th>
-                            <th>Type</th>
-                            <th>IP Address</th>
-                            <th>Status</th>
-                            <th>CPU</th>
-                            <th>Memory</th>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Performance</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-white divide-y divide-gray-200">
             `;
             
             devices.forEach(device => {
+                let statusColor = 'bg-gray-400';
+                let statusText = 'Inactive';
+                if (device.status === 'active') {
+                    statusColor = 'bg-green-500';
+                    statusText = 'Active';
+                } else if (device.status === 'warning') {
+                    statusColor = 'bg-yellow-500';
+                    statusText = 'Warning';
+                }
+                
                 html += `
-                    <tr>
-                        <td>${device.name}</td>
-                        <td>${device.device_type}</td>
-                        <td>${device.ip_address}</td>
-                        <td><span class="status ${device.status}">${device.status}</span></td>
-                        <td><div class="progress-bar"><div class="progress" style="width: ${device.cpu_usage}%"></div>${device.cpu_usage}%</div></td>
-                        <td><div class="progress-bar"><div class="progress" style="width: ${device.memory_usage}%"></div>${device.memory_usage}%</div></td>
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-4 py-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10 bg-gradient-to-r from-primary to-secondary rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-server text-white"></i>
+                                </div>
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900">${device.name}</div>
+                                    <div class="text-sm text-gray-500">${device.device_type} • ${device.ip_address}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span class="status-dot ${statusColor}"></span>
+                                <span class="text-sm text-gray-900">${statusText}</span>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="flex space-x-3">
+                                <div class="text-center">
+                                    <div class="text-sm font-medium text-gray-900">${device.cpu_usage}%</div>
+                                    <div class="text-xs text-gray-500">CPU</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-sm font-medium text-gray-900">${device.memory_usage}%</div>
+                                    <div class="text-xs text-gray-500">Memory</div>
+                                </div>
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
